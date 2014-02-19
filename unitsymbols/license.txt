@@ -1,0 +1,10 @@
+The images in this directory were taken from Wikimedia Commons.
+
+bullseye_blue.svg and bullseye_red.svg are modified versions of
+https://commons.wikimedia.org/wiki/File:Bullseye1.svg.
+
+The unit symbols are modified versions of images used in the following
+Wikipedia article:
+https://en.wikipedia.org/wiki/NATO_Military_Symbols_for_Land_Based_Systems
+
+All images are in the public domain.

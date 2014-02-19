@@ -1,0 +1,127 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    
+    font-family: Verdana;
+    font-size: 10pt;
+    
+    background-color: #eee;
+}
+
+#map {
+    width: 100%;
+    height: 98%;
+    border: 1px solid black;
+}
+
+div.control_section {
+    border-radius: 3px;
+    padding: 3px;
+    background-color: #fff;
+    border: 3px solid #eee;
+    margin-top: 7px;
+    margin-bottom: 7px;
+}
+
+div.editmode {
+    background-color: #eee;
+}
+
+div.editmode:hover {
+    border: 3px solid lightgreen;
+}
+
+div.active_editmode {
+    background-color: #fff;
+    border: 3px solid lightgreen;
+}
+
+div#connect_controls {
+    padding: 3px;
+    border-radius: 3px;
+    background-color: #fff;
+    border: 3px solid lightgreen;
+    margin: auto;
+    max-width: 400px;
+}
+
+#connect_blue_button {
+    color: blue;
+}
+
+#connect_red_button {
+    color: red;
+}
+
+div#control_wrapper {
+    background-color: #eee;
+}
+
+#update_indicator {
+
+}
+
+.olControlMousePosition {
+    position: absolute;
+    left: 10px;
+    top: 0px;
+    height: 15px;
+    font-size: 8pt;
+    background-color: white;
+    font-family: Courier;
+    max-width: 300px;
+    border-radius: 5px;
+}
+
+#control_wrapper {
+    position: absolute;
+    left: 10px;
+    top: 50px;
+    z-index: 1010;
+    background-color: #ffffff;
+    padding: 10px;
+    border-radius: 5px;
+    max-width: 300px;
+    border: 1px solid #eee;
+}
+
+.contextmenu_ll, span {
+    font-family: monospace;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+#intro {
+    margin: auto;
+    max-width: 750px;
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 50px;
+}
+
+div#briefing {
+    position: absolute;
+    top: 50px;
+    z-index: 2000;
+    pointer-events: none;
+    width: 100%;
+    display: none;
+}
+
+div#briefing_content {
+    z-index: 2100;
+    background-color: #fff;
+    margin: auto;
+    max-width: 750px;
+    padding: 20px;
+    border-radius: 10px;
+    pointer-events: auto;
+    max-height: 600px;
+    overflow: scroll;
+}
+
+div#briefing_content pre {
+    white-space: pre-wrap;
+}

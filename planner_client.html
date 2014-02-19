@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html;charset=utf-8" />
+    <title>DCS Mission Planner</title>
+    <link rel="stylesheet" href="css/planner_ng.css"/>
+  </head>
+  <body>
+    <div id="intro">
+      <h1>Mission Planner for DCS: World</h1>
+      <div id="connect_controls">
+        <table>
+          <tr><td>Instance ID:</td><td><input type="text" id="connect_instance_id"/></td></tr>
+          <tr><td>Password:</td><td><input type="text" id="connect_password"/></td></tr>
+          <tr><td colspan="2"><button id="connect_red_button">Connect on Red Side</button><button id="connect_blue_button">Connect on Blue Side</button></td></tr>
+        </table>
+      </div>
+      <h2>Quickstart</h2>
+      <ol>
+	<li>After entering the instance ID and the password for your side, click the appropriate connect button.</li>
+	<li>Collaboratively edit the waypoints. When done, you can download the edited mission using the admin password.
+	  <h4>Editing Routes</h4>
+	  <ul>
+	    <li>You can edit the route of every playable aircraft.</li>
+	    <li>The <b>active route</b> is drawn in blue, inactive routes are shown in magenta. Change the active route with the drop-down menu on the left or by clicking on an inactive route.</li>
+	    <li><b>Right-click the map</b> to add a new waypoint to the active route.</li>
+	    <li><b>Drag waypoints</b> to move them, <b>drag lines in between</b> to insert a waypoint there.</li>
+	    <li><b>Left-click a waypoint</b> to get the option to delete it.</li>
+	  </ul>
+	  <h4>Editing Annotations</h4>
+	  <ul>
+	    <li>Switch to <b>Edit Annotations</b> on the control panel.</li>
+	    <li><b>Right-click and drag</b> to add a new annotation.</li>
+	    <li><b>Left-click an annotation</b> to get the option to delete it.</li>
+	  </ul>
+	  <h4>Other Features</h4>
+	  <ul>
+	    <li><b>Left-click</b> on a yellow pushpin to show airport information.</li>
+	  </ul>
+	</li>
+      </ol>
+      <h2>Acknowledgements</h2>
+      <p>
+	It all started when I built a web server into a DCS mission
+	just because I could.<br>  This Mission Planner is based on
+	the great work of many other people. I want to thank the
+	authors of the following works; without them, this project
+	would not have been possible.
+	<ul>
+	  <li>The A-10C TAD map was extracted from the game by <b>EvilBivol-1</b> <a href="http://www.digitalcombatsimulator.com/de/files/274488/">(DCS User Files entry)</a></li>
+	  <li>The airport information was compiled by <b>kosmos224</b> <a href="http://www.digitalcombatsimulator.com/de/files/379189/">(DCS User Files entry)</a></li>
+	  <li>The unit symbols are from <a href="http://en.wikipedia.org/wiki/NATO_Military_Symbols_for_Land_Based_Systems">Wikipedia</a></li>
+	  <li>All the map-related heavy lifting is done by the excellent <a href="http://www.openlayers.org">OpenLayers</a> JavaScript library</li>
+	  <li>The A-10C TAD map was converted to a OpenLayers-compatible format with <a href="http://www.maptiler.org/">MapTiler</a></li>
+	  <li>Thanks to Speed for writing Slmod! A lot of confusion about the DCS: World Lua environment was cleared up by reading Slmod source code in the early stages of this project.</li>
+	  <li>Thanks to Eagle Dynamics for not only making an awesome simulator, but also making it mod-friendly!</li>
+	</ul>
+      </p>
+      
+    </div>
+    <div id="briefing">
+      <div id="briefing_content">
+      </div>
+    </div>
+    <div id="map"></div>
+    <div id="map_controls">
+      
+    </div>
+    <div id="control_wrapper">
+		<div id="controls" style="display: none;">
+		  <div class="control_section">
+		    <span id="connect_status"></span> <span id="update_indicator">*</span>
+		  </div>
+		  <div class="control_section">
+		    View Options:<br>
+		    <a href="#" id="toggle_briefing">Toggle Briefing</a><br>
+		    <input id="map_opacity_slider" type="range" min="5" max="100" step="5" value="50"/><br>
+		    <select id="baselayer">
+		      <!--<option value="tad">A-10C TAD 1:500k</option>-->
+		      <!--<option value="tad_sm">A-10C TAD 1:500k (Spherical Mercator)</option>-->
+		      <option value="osm">OpenStreetMap</option>
+		      <!--<option value="dcs">DCS: World</option>-->
+		      <option value="google">Google Maps</option>
+		      <option value="google_terrain">Google Maps (Terrain)</option>
+		      <option value="google_sat">Google Maps (Satellite)</option>
+		      <option value="google_hybrid">Google Maps (Hybrid)</option>
+		    </select><br>
+		  </div>
+		  <div id="objectinfo" class="control_section"></div>
+		  <div id="editmode_routes_controls" class="editmode control_section">
+		    <input type="radio" name="editmode" id="editmode_routes" value="routes" checked="true"><label for="editmode_routes">Edit Routes</label><br>
+		    <table>
+		      <tr><td>Active Route: </td><td><select id="activeroute"></select></td>
+		      <tr><td></td><td><button id="center_on_wp0_button">Center on WP0</button></td></tr>
+		    </table>
+		  </div>
+		  <div id="editmode_annotations_controls" class="editmode control_section">
+		    <input type="radio" name="editmode" id="editmode_annotations" value="annotations"><label for="editmode_annotations">Edit Annotations</label><br>
+		    <table>
+		      <tr>
+			<td>Type: </td>
+			<td>
+			  <select id="annotationtype">
+			    <option value="circle">Circle</option>
+			  </select>
+			</td>
+		      </tr>
+		    </table>
+		  </div>
+		  <div class="control_section">
+		    Pull Route<br>
+		    <table>
+		      <tr><td>From: </td><td><select id="copyroute_from"></select></td></tr>
+		      <tr><td></td><td><a href="#" id="copyroute_set_from_to_active">Set From: field to active route</a></td></tr>
+		      <tr><td></td><td><button id="copyroute_button">Pull Route</button></td></tr>
+		    </table>
+		  </div>
+		</div>
+    </div>
+    <script src="http://maps.google.com/maps/api/js?v=3&amp;sensor=false"></script>
+    <script src="js/proj4js-compressed.js"></script>
+    <script src="js/jquery-2.1.0.min.js"></script>
+    <script src="js/OpenLayers.debug.js"></script>
+    
+    <script>var mp = { debug: {} };</script>
+    <script src="js/planner_ng-api.js"></script>
+    <script src="js/planner_ng-model.js"></script>
+    <script src="js/planner_ng-mapview.js"></script>
+    <script src="js/planner_ng.js"></script>
+  </body>
+</html>
