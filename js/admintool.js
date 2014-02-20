@@ -7,6 +7,9 @@ var fs = new zip.fs.FS();
 var md5hash;
 
 $(function() {
+	$("#noscript").hide();
+	$("#step1").show();
+	
 	$("#file-input").change(function() {
 		$("#step1").hide();
 		$("#status").text("hashing file...");
