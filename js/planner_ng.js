@@ -13,6 +13,15 @@ $(function() {
 		$("#dcs_world_map_option").remove();
 		mp.settings.default_map = 'osm';
 	}
+	
+	
+	function abort_connect(reason) {
+		$("#control_wrapper").hide();
+		$("#intro").show();
+		$("#connect_controls").show();
+		alert(reason);
+		return;
+	}
     function connect(instance_id, coalition, password) {
         if (mp.api) {
             if (mp.api.websocket) {
@@ -23,6 +32,7 @@ $(function() {
 		
 		$("#intro").hide();
 		$("#connect_controls").hide();
+		$("#control_wrapper").show();
 		$("#connect_status").text("establishing connection...");
 		
         mp.api = new mp.API();
@@ -31,19 +41,28 @@ $(function() {
             coalition: coalition,
             password: password,
             on_error: function(result) {
-                alert("Could not connect: "+result.error_msg);
+				return abort_connect("Could not connect: "+result.error_msg);
             },
             on_success: function(result) {
+				if (!result.success) {
+					return abort_connect("Could not connect: "+result.error_msg);
+				}
 				$("#connect_status").text("drawing map...");
 				$("#map").show();
 				mp.model = new mp.Model(result.id_prefix, result.data);
 				
+				var routes_found = false;
 				$.each(mp.model.objects, function(_, obj) {
 					if (obj.type == "CLIENT_ACFT_ROUTE") {
+						routes_found = true;
 						$("#activeroute").append($("<option>").attr("value", obj.id).text(obj.group_name));
 						$("#copyroute_from").append($("<option>").attr("value", obj.id).text(obj.group_name));
 					}
 				});
+				
+				if (!routes_found) {
+					return abort_connect("Error: The "+coalition+" side has no routes to edit.");
+				}
 				
 				mp.ui = {}
 				mp.ui.state = "idle"

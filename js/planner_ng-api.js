@@ -27,7 +27,9 @@ mp.API = function(){
         };
         this.websocket.onclose = function() {
             console.info("websocket closed.");
-            alert("Connection lost. Please refresh the page and log in again.");
+            //$("#map").hide();
+			$("#controls").hide();
+			$("#connection_lost").show();
         };
         this.websocket.onmessage = function(evt) {
             msg = JSON.parse(evt.data);

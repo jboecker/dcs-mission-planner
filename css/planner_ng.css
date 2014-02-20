@@ -103,7 +103,7 @@ div#control_wrapper {
 
 #objectinfo {
 	max-height: 300px;
-	overflow: scroll;
+	overflow: auto;
 }
 
 #intro {
@@ -115,7 +115,7 @@ div#control_wrapper {
     margin-top: 50px;
 }
 
-div#briefing {
+div#briefing, div#connection_lost {
     position: absolute;
     top: 50px;
     z-index: 2000;
@@ -124,7 +124,7 @@ div#briefing {
     display: none;
 }
 
-div#briefing_content {
+div#briefing_content, div#connection_lost_content {
     z-index: 2100;
     background-color: #fff;
     margin: auto;
@@ -133,7 +133,7 @@ div#briefing_content {
     border-radius: 10px;
     pointer-events: auto;
     max-height: 600px;
-    overflow: scroll;
+    overflow: auto;
 }
 
 div#briefing_content pre {

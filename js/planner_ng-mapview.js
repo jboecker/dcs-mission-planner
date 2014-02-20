@@ -201,8 +201,8 @@ mp.MapView = function(map_type) {
 		controls.mousepos = new OpenLayers.Control.MousePosition( {id: "ll_mouse", formatOutput: function(ll) { return formatLonLats(ll.transform(map.getProjection(), 'EPSG:4326')); }} );
 		map.addControl(controls.mousepos);
 		
-		controls.scaleline = new OpenLayers.Control.ScaleLine();
-		map.addControl(controls.scaleline);
+		//controls.scaleline = new OpenLayers.Control.ScaleLine();
+		//map.addControl(controls.scaleline);
 		
 		this.inputHandler = new mp.MapView.InputHandler({
 			map: map,

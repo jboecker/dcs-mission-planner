@@ -23,7 +23,7 @@
       <ol>
 	<li>After entering the instance ID and the password for your side, click the appropriate connect button.</li>
 	<li>Collaboratively edit the waypoints. When done, you can download the edited mission using the admin password.
-	  <h4>Editing Routes</h4>
+	  <h4>"Edit Routes" Mode</h4>
 	  <ul>
 	    <li>You can edit the route of every playable aircraft.</li>
 	    <li>The <b>active route</b> is drawn in blue, inactive routes are shown in magenta. Change the active route with the drop-down menu on the left or by clicking on an inactive route.</li>
@@ -31,7 +31,7 @@
 	    <li><b>Drag waypoints</b> to move them, <b>drag lines in between</b> to insert a waypoint there.</li>
 	    <li><b>Left-click a waypoint</b> to get the option to delete it.</li>
 	  </ul>
-	  <h4>Editing Annotations</h4>
+	  <h4>"Edit Annotations" Mode</h4>
 	  <ul>
 	    <li>Switch to <b>Edit Annotations</b> on the control panel.</li>
 	    <li><b>Right-click and drag</b> to add a new annotation.</li>
@@ -45,8 +45,7 @@
       </ol>
       <h2>Acknowledgements</h2>
       <p>
-	It all started when I built a web server into a DCS mission
-	just because I could.<br>  This Mission Planner is based on
+	This Mission Planner is based on
 	the great work of many other people. I want to thank the
 	authors of the following works; without them, this project
 	would not have been possible.
@@ -66,11 +65,19 @@
       <div id="briefing_content">
       </div>
     </div>
+    <div id="connection_lost">
+      <div id="connection_lost_content">
+		<h2>Connection Lost</h2>
+		<p>
+		Please refresh the page and log in again.
+		</p>
+      </div>
+    </div>
     <div id="map" style="display: none;"></div>
     <div id="map_controls">
       
     </div>
-    <div id="control_wrapper">
+    <div id="control_wrapper" style="display: none;">
 		<div class="control_section">
 			<span id="connect_status"></span> <span id="update_indicator">*</span>
 		</div>
