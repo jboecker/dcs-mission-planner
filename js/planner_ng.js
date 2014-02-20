@@ -14,6 +14,11 @@ $(function() {
                 mp.api.websocket.close();
             }
         }
+		
+		$("#intro").hide();
+		$("#connect_controls").hide();
+		$("#connect_status").text("establishing connection...");
+		
         mp.api = new mp.API();
         mp.api.login({
             instance_id: instance_id,
@@ -23,8 +28,7 @@ $(function() {
                 alert("Could not connect: "+result.error_msg);
             },
             on_success: function(result) {
-                $("#intro").hide();
-
+				$("#connect_status").text("drawing map...");
 				$("#map").show();
 				mp.model = new mp.Model(result.id_prefix, result.data);
 				
@@ -45,11 +49,7 @@ $(function() {
 				var rE = mp.mapview.getMap().restrictedExtent;
 				mp.mapview.getMap().setCenter(new OpenLayers.LonLat(rE.left + (rE.right - rE.left)/2, rE.bottom + (rE.top - rE.bottom)/2));
 				
-				$("#connect_controls").hide();
-				$("#connect_status").text("Instance: "+$("#connect_instance_id").val());
-				$("#intro").hide();
-				$("#controls").show();
-                
+				
 				$("#briefing_content").html("");
                 
 				$("#briefing_content").append($("<h1>Mission Description</h1>"));
@@ -60,7 +60,9 @@ $(function() {
                 
 				$("#briefing_content").append($("<h1>Red Task</h1>"));
 				$("#briefing_content").append($("<pre>").text(result.data.redTask));
-
+				
+				$("#connect_status").text("Instance: "+$("#connect_instance_id").val());
+				$("#controls").show();
             },
         });
     }

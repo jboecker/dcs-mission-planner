@@ -12,7 +12,7 @@ mp.API = function(){
     this.login = function(args) {
         this.websocket = new WebSocket(this.websocket_url);
         this.websocket.onopen = function() {
-            console.info("websocket opened.");
+            $("#status").text("downloading data...");
             that.request(
                 {
                     request: 'login',
