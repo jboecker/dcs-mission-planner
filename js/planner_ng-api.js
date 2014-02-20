@@ -23,7 +23,7 @@ mp.API = function(){
                 args.on_success,
                 args.on_error
             );
-            setTimeout(that.check_for_activity, 5000);
+            setTimeout(that.check_for_activity, 2000);
         };
         this.websocket.onclose = function() {
             console.info("websocket closed.");
