@@ -1,7 +1,6 @@
 mp = mp || {};
 mp.settings = {};
 mp.settings.websocket_url = "wss://dcs-mission-planner.herokuapp.com/websocket/";
-mp.settings.download_url = "https://dcs-mission-planner.herokuapp.com/download/";
 
 $.support.cors = true;
 $(function() {
