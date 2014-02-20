@@ -8,7 +8,11 @@
   <body>
     <div id="intro">
       <h1>Mission Planner for DCS: World</h1>
-      <div id="connect_controls">
+	  <div id="noscript">
+			<h2>Enable JavaScript!</h2>
+			JavaScript is not enabled. If you are using Internet Explorer, look for a bar at the bottom of the screen that asks you to allow blocked content.
+	  </div>
+      <div id="connect_controls" style="display: none;">
         <table>
           <tr><td>Instance ID:</td><td><input type="text" id="connect_instance_id"/></td></tr>
           <tr><td>Password:</td><td><input type="text" id="connect_password"/></td></tr>
@@ -62,7 +66,7 @@
       <div id="briefing_content">
       </div>
     </div>
-    <div id="map"></div>
+    <div id="map" style="display: none;"></div>
     <div id="map_controls">
       
     </div>

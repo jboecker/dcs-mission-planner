@@ -46,6 +46,15 @@ div#connect_controls {
     max-width: 400px;
 }
 
+div#noscript {
+    padding: 3px;
+    border-radius: 3px;
+    background-color: #fff;
+    border: 3px solid red;
+    margin: auto;
+    max-width: 400px;
+}
+
 #connect_blue_button {
     color: blue;
 }

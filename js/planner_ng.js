@@ -5,7 +5,8 @@ mp.settings.download_url = "https://dcs-mission-planner.herokuapp.com/download/"
 
 $.support.cors = true;
 $(function() {
-	$("#map").hide();
+	$("#noscript").hide();
+	$("#connect_controls").show();
     
     function connect(instance_id, coalition, password) {
         if (mp.api) {
