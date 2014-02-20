@@ -7,6 +7,12 @@ $(function() {
 	$("#noscript").hide();
 	$("#connect_controls").show();
     
+	if (mp.MAPPACK_VERSION && mp.MAPPACK_VERSION == 1) {
+		mp.settings.default_map = 'dcs';
+	} else {
+		$("#dcs_world_map_option").remove();
+		mp.settings.default_map = 'osm';
+	}
     function connect(instance_id, coalition, password) {
         if (mp.api) {
             if (mp.api.websocket) {
@@ -42,8 +48,9 @@ $(function() {
 				mp.ui = {}
 				mp.ui.state = "idle"
 				
-				mp.mapview = new mp.MapView('dcs');
-				$("#baselayer").val("dcs");
+				mp.mapview = new mp.MapView(mp.settings.default_map);
+				$("#baselayer").val(mp.settings.default_map);
+				update_map_opacity_slider_visibility(mp.settings.default_map);
 				$("#map_opacity_slider").change();
 				$("#activeroute").change();
 				var rE = mp.mapview.getMap().restrictedExtent;
@@ -92,6 +99,14 @@ $(function() {
 		mp.mapview.getMap().layers[0].setOpacity(new_opacity);
 	});
 	
+	function update_map_opacity_slider_visibility(baselayer_name) {
+		if (baselayer_name == "dcs" || baselayer_name == "tad" || baselayer_name == "tad_sm") {
+			$("#map_opacity_slider").show();
+			$("#map_opacity_slider").change();
+		} else {
+			$("#map_opacity_slider").hide();
+		}
+	}
 	$("#baselayer").change(function() {
 		var baselayer_name = $("#baselayer").val();
 		
@@ -103,13 +118,7 @@ $(function() {
 		
 		center.transform("EPSG:4326", mp.mapview.getMap().getProjection());
 		mp.mapview.getMap().setCenter(center, old_zoom);
-		if (baselayer_name == "dcs" || baselayer_name == "tad" || baselayer_name == "tad_sm") {
-			$("#map_opacity_slider").show();
-			$("#map_opacity_slider").change();
-		} else {
-			$("#map_opacity_slider").hide();
-		}
-		
+		update_map_opacity_slider_visibility(baselayer_name);
 	});
 
 	$("#activeroute").change(function() {
