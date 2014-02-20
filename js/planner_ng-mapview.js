@@ -67,7 +67,7 @@ mp.MapView = function(map_type) {
 		vectorLayers.push(new OpenLayers.Layer.Vector("Airport Information by kosmos224", {
 			strategies: [new OpenLayers.Strategy.Fixed()],
 			protocol: new OpenLayers.Protocol.HTTP({
-				url: mp.api.xhr_prefix+"/missionplanner/airports.kml",
+				url: "http://dcs-mission-planner.herokuapp.com/airports.kml",
 				format: new OpenLayers.Format.KML({
 					extractStyles: true,
 					extractAttributes: true,
