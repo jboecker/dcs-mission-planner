@@ -92,6 +92,11 @@ div#control_wrapper {
     font-weight: bold;
 }
 
+#objectinfo {
+	max-height: 300px;
+	overflow: scroll;
+}
+
 #intro {
     margin: auto;
     max-width: 750px;
