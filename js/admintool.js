@@ -15,12 +15,14 @@ $(function() {
 		$("#status").text("hashing file...");
 		var fr = new FileReader();
 		fr.onload = function(evt) {
-			md5hash = SparkMD5.hashBinary(fr.result);
+			var spark = new SparkMD5.ArrayBuffer();
+			spark.append(fr.result);
+			md5hash = spark.end();
 			$("#status").text("");
 			$("#filename-h2").text(document.getElementById("file-input").files[0].name);
 			$("#step2").show();
 		}
-		fr.readAsBinaryString(document.getElementById("file-input").files[0]);
+		fr.readAsArrayBuffer(document.getElementById("file-input").files[0]);
 	});
 	
 	$("#create-instance-button").click(function(evt) {
