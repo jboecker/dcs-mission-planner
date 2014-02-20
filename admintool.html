@@ -139,14 +139,14 @@ local function get_unit_annotations()
 						unit_annotations[#unit_annotations+1] = {
 							["type"] = 'AIRDEFENCE',
 							["x"] = group.route.points[1].x,
-							["z"] = group.route.points[1].z,
+							["z"] = group.route.points[1].y,
 						}
 					end
 					if group.name:match("MP_ARMOR") then
 						unit_annotations[#unit_annotations+1] = {
 							["type"] = 'ARMOR',
 							["x"] = group.route.points[1].x,
-							["z"] = group.route.points[1].z,
+							["z"] = group.route.points[1].y,
 						}
 					end
 				end
@@ -212,8 +212,8 @@ for _, ua in pairs(get_unit_annotations()) do
       id = new_id(),
       type = "UNIT",
       unittype = ua.type,
-      lat = ua.lat,
-      lon = ua.lon
+      x = ua.x,
+      z = ua.z
    }
    data.objects[ann.id] = ann
 end
