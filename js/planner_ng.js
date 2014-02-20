@@ -38,9 +38,8 @@ $(function() {
 				mp.ui = {}
 				mp.ui.state = "idle"
 				
-				mp.mapview = new mp.MapView('osm');
-				$("#baselayer").val("osm");
-				$("#map_opacity_slider").hide();
+				mp.mapview = new mp.MapView('dcs');
+				$("#baselayer").val("dcs");
 				$("#map_opacity_slider").change();
 				$("#activeroute").change();
 				var rE = mp.mapview.getMap().restrictedExtent;
@@ -102,7 +101,7 @@ $(function() {
 		
 		center.transform("EPSG:4326", mp.mapview.getMap().getProjection());
 		mp.mapview.getMap().setCenter(center, old_zoom);
-		if (baselayer_name == "tad" || baselayer_name == "tad_sm") {
+		if (baselayer_name == "dcs" || baselayer_name == "tad" || baselayer_name == "tad_sm") {
 			$("#map_opacity_slider").show();
 			$("#map_opacity_slider").change();
 		} else {

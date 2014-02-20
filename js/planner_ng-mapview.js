@@ -233,7 +233,7 @@ mp.MapView = function(map_type) {
 			return "";
                 }
 	}
-	
+
 
 	function createMap(name) {
 		switch(name) {
@@ -278,14 +278,18 @@ mp.MapView = function(map_type) {
 
 		case 'dcs':
 			createMapFromBaseLayer(
-				new OpenLayers.Layer.Image(
+				new OpenLayers.Layer.TMS(
 					'DCS: World',
-					'map_export.png',
-					new OpenLayers.Bounds(42.02, 42.22, 42.07, 42.27),
-					new OpenLayers.Size(512, 512),
+					'maps/DCS-EPSG4326/',
 					{
-						numZoomLevels: 3,
+						type: 'png',
+						getURL: tad_getTileURL,
 						'projection':'EPSG:4326',
+						serverResolutions: [0.703125/1, 0.703125/2, 0.703125/4, 0.703125/8, 0.703125/16, 0.703125/32, 0.703125/64, 0.703125/128, 0.703125/256, 0.703125/512, 0.703125/1024, 0.703125/2048, 0.703125/4096, 0.703125/8192],
+						units: 'degrees',
+						mapBounds: new OpenLayers.Bounds( 37.0, 41.0, 46.0, 45.5), // for get_URL function
+						mapMinZoom: 4,
+						mapMaxZoom: 13,
 					}
 				)
 			);
@@ -589,15 +593,14 @@ mp.MapView.InputHandler = OpenLayers.Class({
 			},
 			rightdown: function(args) {
 				console.log("c");
-				this.drawState.origin = new OpenLayers.Geometry.Point(args.mapCoords.lon, args.mapCoords.lat);
+				this.drawState.origin_900913 = new OpenLayers.Geometry.Point(args.mapCoords.lon, args.mapCoords.lat).transform(this.map.getProjection(), 'EPSG:900913');
 				this.drawState.feature = new OpenLayers.Feature.Vector();
 				this.vectorLayers[LAYER_ID_ANNOTATIONS].addFeatures([this.drawState.feature]);
 
-				console.log(this.drawState.origin);
-				this.drawState.radius = this.drawState.origin.distanceTo(new OpenLayers.Geometry.Point(args.mapCoords.lon, args.mapCoords.lat));
+				this.drawState.radius = this.drawState.origin_900913.distanceTo(new OpenLayers.Geometry.Point(args.mapCoords.lon, args.mapCoords.lat).transform(this.map.getProjection(), 'EPSG:900913'));
 				this.drawState.feature.geometry = OpenLayers.Geometry.Polygon.createRegularPolygon(
-					this.drawState.origin, this.drawState.radius, 24, 0
-				);
+					this.drawState.origin_900913, this.drawState.radius, 24, 0
+				).transform("EPSG:900913", this.map.getProjection());
 				this.drawState.feature.layer.drawFeature(this.drawState.feature);
 				this.vectorLayers[LAYER_ID_ANNOTATIONS].redraw();
 				
@@ -614,11 +617,10 @@ mp.MapView.InputHandler = OpenLayers.Class({
 		},
 		"draw_circle_mousedown": {
 			move: function(args) {
-					this.drawState.radius = this.drawState.origin.distanceTo(new OpenLayers.Geometry.Point(args.mapCoords.lon, args.mapCoords.lat));
-					console.log(this.drawState.radius);
+					this.drawState.radius = this.drawState.origin_900913.distanceTo(new OpenLayers.Geometry.Point(args.mapCoords.lon, args.mapCoords.lat).transform(this.map.getProjection(), 'EPSG:900913'));
 					this.drawState.feature.geometry = OpenLayers.Geometry.Polygon.createRegularPolygon(
-						this.drawState.origin, this.drawState.radius, 24, 0
-					);
+						this.drawState.origin_900913, this.drawState.radius, 24, 0
+					).transform("EPSG:900913", this.map.getProjection());
 					this.drawState.feature.layer.drawFeature(this.drawState.feature);
 					this.vectorLayers[LAYER_ID_ANNOTATIONS].redraw();
 			},
