@@ -280,7 +280,7 @@ mp.MapView = function(map_type) {
 			createMapFromBaseLayer(
 				new OpenLayers.Layer.TMS(
 					'DCS: World',
-					'maps/DCS-EPSG4326/',
+					'dcs-map/DCS-EPSG4326/',
 					{
 						type: 'png',
 						getURL: tad_getTileURL,
