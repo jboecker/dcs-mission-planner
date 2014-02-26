@@ -137,6 +137,7 @@ $(function() {
 		mp.mapview = new mp.MapView(baselayer_name);
 		
 		center.transform("EPSG:4326", mp.mapview.getMap().getProjection());
+		if (baselayer_name == 'dcs' && old_zoom > 15) old_zoom = 15;
 		mp.mapview.getMap().setCenter(center, old_zoom);
 		update_map_opacity_slider_visibility(baselayer_name);
 	});
