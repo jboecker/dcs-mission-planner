@@ -71,6 +71,16 @@ div#control_wrapper {
 
 }
 
+div.olControlZoom {
+    position: absolute;
+    top: 8px;
+    right: 8px !important;
+    left: auto !important;
+    background: rgba(255,255,255,0.4);
+    border-radius: 4px;
+    padding: 2px;
+}
+
 .olControlMousePosition {
     position: absolute;
     left: 10px;

@@ -48,6 +48,7 @@ mp.MapView = function(map_type) {
 	function createMapFromBaseLayer(base_layer, map_arguments) {
 
 		map = new OpenLayers.Map(OpenLayers.Util.extend({
+            theme: null, // prevent OpenLayers from doing another request for style.css
 			div:'map',
 			center: new OpenLayers.LonLat(lon = 42.045493, lat = 42.240306).transform('EPSG:4326', 'EPSG:900913'),
 			zoom: 8,
@@ -67,7 +68,7 @@ mp.MapView = function(map_type) {
 		vectorLayers.push(new OpenLayers.Layer.Vector("Airport Information by kosmos224", {
 			strategies: [new OpenLayers.Strategy.Fixed()],
 			protocol: new OpenLayers.Protocol.HTTP({
-				url: "http://dcs-mission-planner.herokuapp.com/airports.kml",
+				url: "https://dcs-mission-planner.herokuapp.com/airports.kml",
 				format: new OpenLayers.Format.KML({
 					extractStyles: true,
 					extractAttributes: true,
@@ -85,21 +86,21 @@ mp.MapView = function(map_type) {
 			projection: "EPSG:4326",
 			styleMap: new OpenLayers.StyleMap({
 				"UNIT_AIRDEFENCE": new OpenLayers.Style(OpenLayers.Util.applyDefaults({
-					externalGraphic: 'unitsymbols/AIRDEFENCE.svg',
+					externalGraphic: 'vendors/wikimedia-commons/AIRDEFENCE.svg',
 					graphicWidth: 34,
 					graphicHeight: 20,
 					fillOpacity: 1,
 				}, OpenLayers.Feature.Vector.style["default"])),
 				"UNIT_ARMOR": new OpenLayers.Style(OpenLayers.Util.applyDefaults({
-					externalGraphic: 'unitsymbols/ARMOR.svg',
+					externalGraphic: 'vendors/wikimedia-commons/ARMOR.svg',
 					graphicWidth: 34,
 					graphicHeight: 20,
 					fillOpacity: 1,
 				}, OpenLayers.Feature.Vector.style["default"])),
 				'bullseye': new OpenLayers.Style(OpenLayers.Util.applyDefaults({
-					externalGraphic: 'unitsymbols/bullseye_${coalition}.svg',
-					graphicWidth: 35,
-					graphicHeight: 35,
+					externalGraphic: 'vendors/wikimedia-commons/bullseye_${coalition}.svg',
+					graphicWidth: 30,
+					graphicHeight: 30,
 					fillOpacity: 1,
 				}, OpenLayers.Feature.Vector.style["default"])),
 			}),
