@@ -12,6 +12,7 @@ $(function() {
 	} else {
 		$("#dcs_world_map_option").remove();
 		mp.settings.default_map = 'osm';
+        $("#dcs_map_info").show();
 	}
 	
 	

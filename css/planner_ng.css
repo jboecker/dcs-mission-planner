@@ -46,6 +46,16 @@ div#connect_controls {
     max-width: 400px;
 }
 
+div#dcs_map_info {
+    padding: 3px;
+    border-radius: 3px;
+    background-color: #fff;
+    border: 3px solid yellow;
+    margin: auto;
+    max-width: 400px;
+    margin-top: 10px;
+}
+
 div#noscript {
     padding: 3px;
     border-radius: 3px;
