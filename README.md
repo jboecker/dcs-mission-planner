@@ -3,6 +3,8 @@ dcs-mission-planner
 
 A browser-based multiplayer mission planner for DCS: World
 
+[Try it online](http://jboecker.github.io/dcs-mission-planner/planner_client.html)
+
 For more information and discussion, see [the ED forum thread.](http://forums.eagle.ru/showthread.php?t=121145)
 
 License
