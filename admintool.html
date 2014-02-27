@@ -365,6 +365,7 @@ end
 
 data = JSON:decode(ipc_unescape(js.global.ipc.data))
 
+js.global.console.log("calculating routes")
 
 local routes = {}
 local second_waypoints_by_group_name = {}
@@ -378,8 +379,7 @@ for _, obj in pairs(data.objects) do
    end
 end
 
-
-
+--[[
 for group_name, route in pairs(routes) do
    local coalition_name, country_id, heli_or_plane, group_id = find_heli_or_plane_group(group_name)
    if coalition_name and country_id and heli_or_plane and group_id then -- there is a group with this name!
@@ -435,7 +435,68 @@ for group_name, route in pairs(routes) do
       end
    end
 end
+]]--
 
+
+
+function update_waypoints(group, route, data)
+      -- delete existing waypoints
+      local points = group.route.points
+      for i = #points,2,-1 do
+         points[i] = nil
+      end
+      
+      -- add new waypoints
+      
+      local wpt = second_waypoints_by_group_name[group_name]
+      local i = 2
+      while wpt do
+         local n = i - 2
+         local name = wpt.name
+         if name == "" then name = nil end
+         
+         group.route.points[i] = {
+            ["x"] = wpt.x,
+            ["y"] = wpt.z,
+            ["name"] = name,
+            ["alt"] = wpt.alt,
+            ["type"] = "Turning Point",
+            ["action"] = "Turning Point",
+            ["alt_type"] = wpt.alt_type,
+            ["formation_template"] = "",
+            ["properties"] = {
+               ["vnav"] = 1,
+               ["scale"] = 0,
+               ["angle"] = 0,
+               ["vangle"] = 0,
+               ["steer"] = 2
+            },
+            ["speed"] = 140,
+            ["ETA_locked"] = false,
+            ["task"] = {
+               ["id"] = "ComboTask",
+               ["params"] = {["tasks"] = {}}
+            },
+            ["speed_locked"] = true
+         }
+         
+
+         if wpt.next_waypoint_id == "" then
+            wpt = nil
+            break
+         else
+            wpt = data.objects[wpt.next_waypoint_id]
+            i = i + 1
+         end
+      end
+end
+
+
+
+
+
+
+js.global.console.log("calculating updated_positions, delete_unit")
 
 local updated_positions = {}
 local delete_unit = {}
@@ -448,6 +509,8 @@ if data.missionState then
   end
 end
 
+js.global.console.log("big loop")
+
    for k, coalition_name in pairs({"red", "blue"}) do
       for country_id=1,#mission.coalition[coalition_name].country do
          for _, category in pairs({"helicopter", "plane", "vehicle"}) do
@@ -455,6 +518,14 @@ end
             if mission.coalition[coalition_name].country[country_id][category] then
                for group_id=1,#mission.coalition[coalition_name].country[country_id][category].group do
                   local group = mission.coalition[coalition_name].country[country_id][category].group[group_id]
+				  
+				  js.global.console.log(group.name)
+				  
+				  
+				  if routes[group.name] then
+					update_waypoints(group, routes[group.name], data)
+				  end
+				  
                   local new_units = {}
                   for _, unit in pairs(group.units) do
                     local pu = updated_positions[unit.unitId]
@@ -472,6 +543,7 @@ end
 				    group.route.points[1].x = group.units[1].x
 					group.route.points[1].y = group.units[1].y
 				  end
+				  
                end
             end
             
@@ -480,8 +552,11 @@ end
    end
 
 
+js.global.console.log("serializing result")
+
 js.global.ipc.mission_str = ipc_escape(table.show(mission, 'mission'))
 
+js.global.console.log("done.")
 		</span>
 		
 		<span id="json_lua" style="display: none;">
