@@ -132,5 +132,36 @@ $(function() {
 		});
 	});
 	
+	$("#upload_mission_state_button").click(function(evt) {
+		var file = document.getElementById("state-input").files[0];
+		var filename = document.getElementById("state-input").files[0].name;
+		$("#status").text("reading state...");
+		var reader = new FileReader();
+		reader.readAsText(file);
+		reader.onload = function(e) {
+			var text = reader.result;
+				var ws = new WebSocket(WEBSOCKET_URL);
+				ws.onopen = function() {
+					$("#status").text("uploading state...");
+					var request = { request_id: 1,
+									request: "set_mission_state",
+									admin_pw: $("#admin_pw-input").val(),
+									instance_id: $("#instance_id-input").val(),
+									missionState: JSON.parse(text),
+									};
+					ws.send(JSON.stringify(request));
+				}
+				ws.onmessage = function(e) {
+					var msg = JSON.parse(e.data);
+					$("#status").text("processing response...");
+					if (!msg.success) {
+						$("#status").text("error");
+						alert("Error: "+msg.error_msg);
+					} else {
+						$("#status").text("uploaded mission state.");
+					}
+				}
+		}
+	});
 	
 });

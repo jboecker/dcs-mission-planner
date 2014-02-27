@@ -1,0 +1,26 @@
+-- execute this script from a mission to save the state
+-- requires Mist to be loaded
+-- requires modifications to MissionScripting.lua for the saveMissionState function to be available
+
+local ret = {}
+ret.position_updates = {}
+ret.destroyed_units = {}
+
+for _, aliveUnit in pairs(mist.DBs.aliveUnits) do
+    local unit = Unit.getByName(aliveUnit.unitName)
+    local pos = unit:getPosition()
+    ret.position_updates[#ret.position_updates+1] = {
+        unitId = aliveUnit.unitId,
+        heading = mist.getHeading(unit),
+        x = pos.p.x,
+        y = pos.p.z,
+    }
+end
+
+for _, deadUnit in pairs(mist.DBs.removedAliveUnits) do
+    ret.destroyed_units[#ret.destroyed_units+1] = {
+        unitId = deadUnit.unitId
+    }
+end
+
+saveMissionState(ret)

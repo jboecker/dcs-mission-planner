@@ -68,6 +68,9 @@
 						<tr><th>Instance ID:</th><td><input type="text" id="instance_id-input"></td></tr>
 						<tr><th>Admin Password:</td><td><input type="text" id="admin_pw-input"></td></tr>
 						<tr><th></th><td><button id="save-mission-button">Save Mission</button></td></tr>
+						<tr><th></th><td>&nbsp;</td></tr>
+						<tr><th>Mission State:</th><td><input type="file" accept="text/plain" id="state-input"></td></tr>
+						<tr><th></th><td><button id="upload_mission_state_button">Upload Mission State</button></td></tr>
 					</table>
 				</td>
 				</tr>
@@ -432,6 +435,50 @@ for group_name, route in pairs(routes) do
       end
    end
 end
+
+
+local updated_positions = {}
+local delete_unit = {}
+if data.missionState then
+  for _, pu in pairs(data.missionState.position_updates) do
+    updated_positions[pu.unitId] = pu
+  end
+  for _, du in pairs(data.missionState.destroyed_units) do
+    delete_unit[du.unitId] = true
+  end
+end
+
+   for k, coalition_name in pairs({"red", "blue"}) do
+      for country_id=1,#mission.coalition[coalition_name].country do
+         for _, category in pairs({"helicopter", "plane", "vehicle"}) do
+            
+            if mission.coalition[coalition_name].country[country_id][category] then
+               for group_id=1,#mission.coalition[coalition_name].country[country_id][category].group do
+                  local group = mission.coalition[coalition_name].country[country_id][category].group[group_id]
+                  local new_units = {}
+                  for _, unit in pairs(group.units) do
+                    local pu = updated_positions[unit.unitId]
+                    if pu then
+                      unit.x = pu.x
+                      unit.y = pu.y
+                      unit.heading = pu.heading
+                    end
+                    if not delete_unit[unit.unitId] then
+                      new_units[#new_units+1] = unit
+                    end
+                  end
+                  group.units = new_units
+				  if #group.units > 0 then
+				    group.route.points[1].x = group.units[1].x
+					group.route.points[1].y = group.units[1].y
+				  end
+               end
+            end
+            
+         end
+      end
+   end
+
 
 js.global.ipc.mission_str = ipc_escape(table.show(mission, 'mission'))
 
