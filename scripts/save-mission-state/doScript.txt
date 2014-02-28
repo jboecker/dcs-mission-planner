@@ -7,20 +7,24 @@ ret.position_updates = {}
 ret.destroyed_units = {}
 
 for _, aliveUnit in pairs(mist.DBs.aliveUnits) do
-    local unit = Unit.getByName(aliveUnit.unitName)
-    local pos = unit:getPosition()
-    ret.position_updates[#ret.position_updates+1] = {
-        unitId = aliveUnit.unitId,
-        heading = mist.getHeading(unit),
-        x = pos.p.x,
-        y = pos.p.z,
-    }
+    if aliveUnit.category == "vehicle" then
+      local unit = Unit.getByName(aliveUnit.unitName)
+      local pos = unit:getPosition()
+      ret.position_updates[#ret.position_updates+1] = {
+          unitId = aliveUnit.unitId,
+          heading = mist.getHeading(unit),
+          x = pos.p.x,
+          y = pos.p.z,
+      }
+	end
 end
 
 for _, deadUnit in pairs(mist.DBs.removedAliveUnits) do
+  if deadUnit.category == "vehicle" then
     ret.destroyed_units[#ret.destroyed_units+1] = {
         unitId = deadUnit.unitId
     }
+  end
 end
 
 saveMissionState(ret)
