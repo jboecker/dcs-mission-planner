@@ -6,19 +6,27 @@ ipc = {}
 var fs = new zip.fs.FS();
 var md5hash;
 
+function set_status(text) {
+	console.log("status: " + text);
+	setTimeout(function() {
+		$("#status").text(text);
+		window.status = text;
+	}, 1);
+}
+
 $(function() {
 	$("#noscript").hide();
 	$("#step1").show();
 	
 	$("#file-input").change(function() {
 		$("#step1").hide();
-		$("#status").text("hashing file...");
+		set_status("hashing file...");
 		var fr = new FileReader();
 		fr.onload = function(evt) {
 			var spark = new SparkMD5.ArrayBuffer();
 			spark.append(fr.result);
 			md5hash = spark.end();
-			$("#status").text("");
+			set_status("");
 			$("#filename-h2").text(document.getElementById("file-input").files[0].name);
 			$("#step2").show();
 		}
@@ -28,7 +36,7 @@ $(function() {
 	$("#create-instance-button").click(function(evt) {
 		var file = document.getElementById("file-input").files[0];
 		var filename = document.getElementById("file-input").files[0].name;
-		$("#status").text("reading file...");
+		set_status("reading file...");
 		fs.importBlob(file, function() {
 			$("#status").text("extracting mission...");
 			fs.find("mission").getText(function(luaCode) {
@@ -39,7 +47,7 @@ $(function() {
 				$("#status").text("opening websocket...");
 				var ws = new WebSocket(WEBSOCKET_URL);
 				ws.onopen = function() {
-					$("#status").text("uploading data...");
+					set_status("uploading data...");
 					var request = { request_id: 1,
 									request: "create_instance",
 									filename: filename,
@@ -50,7 +58,7 @@ $(function() {
 					ws.send(JSON.stringify(request));
 				}
 				ws.onmessage = function(msg) {
-					$("#status").text("processing response...");
+					set_status("processing response...");
 					var data = JSON.parse(msg.data);
 					$("#instance_id-input").val(data.instance_id);
 					$("#admin_pw-input").val(data.admin_pw);
@@ -60,7 +68,7 @@ $(function() {
 					$("#admin-pw-td").text(data.admin_pw);
 					$("#instance_info").css("visibility", "visible");
 					console.log(data);
-					$("#status").text("instance created.");
+					set_status("instance created.");
 				}
 			},
 			null,
@@ -73,19 +81,19 @@ $(function() {
 	$("#save-mission-button").click(function(evt) {
 		var file = document.getElementById("file-input").files[0];
 		var filename = document.getElementById("file-input").files[0].name;
-		$("#status").text("opening file...");
+		set_status("extracting mission...");
 		fs.importBlob(file, function() {
 			fs.find("mission").getText(function(luaCode) {
-				$("#status").text("loading mission...");
 				Lua.execute(luaCode);
+				set_status("loading mission...");
 				
 				fs.importBlob(file, function() {
 					fs.remove(fs.find("mission"));
 					
-					$("#status").text("opening websocket...");
+					set_status("opening websocket...");
 					var ws = new WebSocket(WEBSOCKET_URL);
 					ws.onopen = function() {
-						$("#status").text("requesting data from server...");
+						set_status("requesting data from server...");
 						var request = { request_id: 1,
 										request: "save_mission",
 										admin_pw: $("#admin_pw-input").val(),
@@ -94,7 +102,7 @@ $(function() {
 						ws.send(JSON.stringify(request));
 					}
 					ws.onmessage = function(msg) {
-						$("#status").text("processing response (1/3)...");
+						set_status("processing response [parsing message]...");
 						var data = JSON.parse(msg.data);
 						if (!data.success) {
 							alert("Error: "+data.error_msg);
@@ -135,14 +143,14 @@ $(function() {
 	$("#upload_mission_state_button").click(function(evt) {
 		var file = document.getElementById("state-input").files[0];
 		var filename = document.getElementById("state-input").files[0].name;
-		$("#status").text("reading state...");
+		set_status("reading state...");
 		var reader = new FileReader();
 		reader.readAsText(file);
 		reader.onload = function(e) {
 			var text = reader.result;
 				var ws = new WebSocket(WEBSOCKET_URL);
 				ws.onopen = function() {
-					$("#status").text("uploading state...");
+					set_status("uploading state...");
 					var request = { request_id: 1,
 									request: "set_mission_state",
 									admin_pw: $("#admin_pw-input").val(),
@@ -153,12 +161,12 @@ $(function() {
 				}
 				ws.onmessage = function(e) {
 					var msg = JSON.parse(e.data);
-					$("#status").text("processing response...");
+					set_status("processing response...");
 					if (!msg.success) {
-						$("#status").text("error");
+						set_status("error");
 						alert("Error: "+msg.error_msg);
 					} else {
-						$("#status").text("uploaded mission state.");
+						set_status("uploaded mission state.");
 					}
 				}
 		}
