@@ -44,6 +44,9 @@ $(function() {
 	});
 	
 	$("#create-instance-button").click(function(evt) {
+        if (evt.shiftKey) {
+            WEBSOCKET_URL = "ws://localhost:5000/websocket/";
+        }
 		var file = document.getElementById("file-input").files[0];
 		var filename = document.getElementById("file-input").files[0].name;
 		set_status("reading file...");
@@ -89,6 +92,9 @@ $(function() {
 	
 	
 	$("#save-mission-button").click(function(evt) {
+        if (evt.shiftKey) {
+            WEBSOCKET_URL = "ws://localhost:5000/websocket/";
+        }
 		var file = document.getElementById("file-input").files[0];
 		var filename = document.getElementById("file-input").files[0].name;
 		set_status("extracting mission...");
@@ -157,6 +163,9 @@ $(function() {
 	});
 	
 	$("#upload_mission_state_button").click(function(evt) {
+        if (evt.shiftKey) {
+            WEBSOCKET_URL = "ws://localhost:5000/websocket/";
+        }
 		var file = document.getElementById("state-input").files[0];
 		var filename = document.getElementById("state-input").files[0].name;
 		set_status("reading state...");
