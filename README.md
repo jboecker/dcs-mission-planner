@@ -15,9 +15,9 @@ GPLv3 or later (see GPLv3.txt).  The third-party works under the vendors/ direct
 are governed by the licenses found in the respective
 subdirectories. They include:
 
-* jQuery (github.com/jquery/jquery, MIT-style)
-* weblua (github.com/campadrenalin/weblua, exact license unclear; must be MIT-compatible since Lua itself is MIT-licensed)
+* jQuery (github.com/jquery/jquery, MIT)
+* weblua (github.com/campadrenalin/weblua, MIT)
 * OpenLayers (github.com/openlayers/openlayers, see license.txt)
-* proj4js (github.com/proj4js/proj4js, MIT-style)
+* proj4js (github.com/proj4js/proj4js, MIT)
 * spark-md5 (github.com/satazor/SparkMD5, WTFPL)
 * zip.js (github.com/gildas-lormeau/zip.js, BSD)
