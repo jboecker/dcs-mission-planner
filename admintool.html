@@ -80,483 +80,306 @@
 		<hr>
 		<div id="status"></div>
 		<span id="load_mission_lua" style="display: none;">
--- load_mission.lua
--- read mission file from STDIN, write JSON-encoded mission data to STDOUT
+function load_mission()
+	local last_id = 0
+	local function new_id()
+	   last_id = last_id + 1
+		return "0/"..last_id
+	end
 
-local last_id = 0
-local function new_id()
-   last_id = last_id + 1
-	return "0/"..last_id
-end
-
-local function get_playable_groups(coalition_list)
-	local coalition_list = coalition_list or {"red", "blue"}
-	
-	local playable_groups = {}
-    local groupid_to_coalition = {}
-	for _, coalition_name in ipairs(coalition_list) do
-		local coalition = mission.coalition[coalition_name]
-		for _, country in ipairs(coalition.country) do
-			if country.plane then
-				for _, group in ipairs(country.plane.group) do
-					if group.units[1].skill == "Client" then
-						playable_groups[#playable_groups+1] = group
-                        groupid_to_coalition[group.groupId] = coalition_name
+	local function get_playable_groups(coalition_list)
+		local coalition_list = coalition_list or {"red", "blue"}
+		
+		local playable_groups = {}
+		local groupid_to_coalition = {}
+		for _, coalition_name in ipairs(coalition_list) do
+			local coalition = mission.coalition[coalition_name]
+			for _, country in ipairs(coalition.country) do
+				if country.plane then
+					for _, group in ipairs(country.plane.group) do
+						if group.units[1].skill == "Client" then
+							playable_groups[#playable_groups+1] = group
+							groupid_to_coalition[group.groupId] = coalition_name
+						end
 					end
 				end
-			end
-			if country.helicopter then
-				for _, group in ipairs(country.helicopter.group) do
-					if group.units[1].skill == "Client" then
-						playable_groups[#playable_groups+1] = group
-                        groupid_to_coalition[group.groupId] = coalition_name
+				if country.helicopter then
+					for _, group in ipairs(country.helicopter.group) do
+						if group.units[1].skill == "Client" then
+							playable_groups[#playable_groups+1] = group
+							groupid_to_coalition[group.groupId] = coalition_name
+						end
 					end
 				end
 			end
 		end
+		return playable_groups, groupid_to_coalition
 	end
-	return playable_groups, groupid_to_coalition
-end
 
 
 
-local function get_unit_annotations()
-	
-	local unit_annotations = {}
-	for _, coalition_name in ipairs({"red", "blue"}) do
-		local coalition = mission.coalition[coalition_name]
-		for _, country in ipairs(coalition.country) do
-			if country.plane then
-				for _, group in ipairs(country.plane.group) do
+	local function get_unit_annotations()
+		
+		local unit_annotations = {}
+		for _, coalition_name in ipairs({"red", "blue"}) do
+			local coalition = mission.coalition[coalition_name]
+			for _, country in ipairs(coalition.country) do
+				if country.plane then
+					for _, group in ipairs(country.plane.group) do
 
-				end
-			end
-			if country.helicopter then
-				for _, group in ipairs(country.helicopter.group) do
-
-				end
-			end
-			if country.vehicle then
-				for _, group in ipairs(country.vehicle.group) do
-					if group.name:match("MP_AIRDEFENCE") then
-						unit_annotations[#unit_annotations+1] = {
-							["type"] = 'AIRDEFENCE',
-							["x"] = group.route.points[1].x,
-							["z"] = group.route.points[1].y,
-						}
-					end
-					if group.name:match("MP_ARMOR") then
-						unit_annotations[#unit_annotations+1] = {
-							["type"] = 'ARMOR',
-							["x"] = group.route.points[1].x,
-							["z"] = group.route.points[1].y,
-						}
 					end
 				end
-			end
+				if country.helicopter then
+					for _, group in ipairs(country.helicopter.group) do
 
+					end
+				end
+				if country.vehicle then
+					for _, group in ipairs(country.vehicle.group) do
+						if group.name:match("MP_AIRDEFENCE") then
+							unit_annotations[#unit_annotations+1] = {
+								["type"] = 'AIRDEFENCE',
+								["x"] = group.route.points[1].x,
+								["z"] = group.route.points[1].y,
+							}
+						end
+						if group.name:match("MP_ARMOR") then
+							unit_annotations[#unit_annotations+1] = {
+								["type"] = 'ARMOR',
+								["x"] = group.route.points[1].x,
+								["z"] = group.route.points[1].y,
+							}
+						end
+					end
+				end
+
+			end
 		end
+		return unit_annotations
 	end
-	return unit_annotations
+
+
+
+	data = {
+	   objects = {},
+	   version = 1,
+	   briefing = {
+		  description = mission.descriptionText,
+		  blueTask = mission.descriptionBlueTask,
+		  redTask = mission.descriptionRedTask,
+	   },
+	}
+
+	-- aircraft waypoints
+	playable_groups, groupid_to_coalition = get_playable_groups()
+	for _, group in ipairs(playable_groups) do
+	   
+	   local client_acft_route = {
+		  id = new_id(),
+		  type = "CLIENT_ACFT_ROUTE",
+		  group_name = group.name ,
+		  visibility = groupid_to_coalition[group.groupId]
+	   }
+	   data.objects[client_acft_route.id] = client_acft_route
+	   
+	   local prev_wpt = nil
+	   for i, point in ipairs(group.route.points) do
+		  local wpt = {
+			 id = new_id(),
+			 type = "CLIENT_ACFT_WAYPOINT",
+			 route_id = client_acft_route.id,
+			 next_waypoint_id = "",
+			 x = point.x,
+			 z = point.y,
+			 alt_type = point.alt_type,
+			 alt = point.alt,
+			 name = (point.name or ""),
+			 visibility = groupid_to_coalition[group.groupId]
+		  }
+		  if i == 1 then
+			 client_acft_route.first_waypoint_id = wpt.id
+		  end
+		  data.objects[wpt.id] = wpt
+		  if prev_wpt ~= nil then
+			 prev_wpt.next_waypoint_id = wpt.id
+		  end
+		  prev_wpt = wpt
+	   end
+	end
+
+	-- add unit annotations
+	for _, ua in pairs(get_unit_annotations()) do
+	   local ann = {
+		  id = new_id(),
+		  type = "UNIT",
+		  unittype = ua.type,
+		  x = ua.x,
+		  z = ua.z
+	   }
+	   data.objects[ann.id] = ann
+	end
+
+	for _, coa in pairs({"blue", "red"}) do
+	   local bullseye = {
+		  id = new_id(),
+		  type = "BULLSEYE",
+		  x = mission.coalition[coa].bullseye.x, 
+		  z = mission.coalition[coa].bullseye.y,
+		  coalition = coa,
+		  visibility = coa,
+	   }
+	   data.objects[bullseye.id] = bullseye
+	end
+
+	ipc_set("data", JSON:encode(data))
 end
-
-
-
-data = {
-   objects = {},
-   version = 1,
-   briefing = {
-      description = mission.descriptionText,
-      blueTask = mission.descriptionBlueTask,
-      redTask = mission.descriptionRedTask,
-   },
-}
-
--- aircraft waypoints
-playable_groups, groupid_to_coalition = get_playable_groups()
-for _, group in ipairs(playable_groups) do
-   
-   local client_acft_route = {
-      id = new_id(),
-      type = "CLIENT_ACFT_ROUTE",
-      group_name = group.name ,
-      visibility = groupid_to_coalition[group.groupId]
-   }
-   data.objects[client_acft_route.id] = client_acft_route
-   
-   local prev_wpt = nil
-   for i, point in ipairs(group.route.points) do
-      local wpt = {
-         id = new_id(),
-         type = "CLIENT_ACFT_WAYPOINT",
-         route_id = client_acft_route.id,
-         next_waypoint_id = "",
-         x = point.x,
-         z = point.y,
-         alt_type = point.alt_type,
-         alt = point.alt,
-         name = (point.name or ""),
-         visibility = groupid_to_coalition[group.groupId]
-      }
-      if i == 1 then
-         client_acft_route.first_waypoint_id = wpt.id
-      end
-      data.objects[wpt.id] = wpt
-      if prev_wpt ~= nil then
-         prev_wpt.next_waypoint_id = wpt.id
-      end
-      prev_wpt = wpt
-   end
-end
-
--- add unit annotations
-for _, ua in pairs(get_unit_annotations()) do
-   local ann = {
-      id = new_id(),
-      type = "UNIT",
-      unittype = ua.type,
-      x = ua.x,
-      z = ua.z
-   }
-   data.objects[ann.id] = ann
-end
-
-for _, coa in pairs({"blue", "red"}) do
-   local bullseye = {
-      id = new_id(),
-      type = "BULLSEYE",
-      x = mission.coalition[coa].bullseye.x, 
-      z = mission.coalition[coa].bullseye.y,
-      coalition = coa,
-      visibility = coa,
-   }
-   data.objects[bullseye.id] = bullseye
-end
-
-js.global.ipc.data = ipc_escape(JSON:encode(data))
-
-
 		</span>
 		
 		<span id="save_mission_lua" style="display: none;">
--- save_mission.lua
--- read JSON data with mission file and objects from STDIN,
--- write edited mission file to STDOUT
 
-function table.show(t, name, indent)
-   local cart     -- a container
-   local autoref  -- for self references
+function save_impl()
 
-   --[[ counts the number of elements in a table
-   local function tablecount(t)
-      local n = 0
-      for _, _ in pairs(t) do n = n+1 end
-      return n
-   end
-   ]]
-   -- (RiciLake) returns true if the table is empty
-   local function isemptytable(t) return next(t) == nil end
 
-   local function basicSerialize (o)
-      local so = tostring(o)
-      if type(o) == "function" then
-         local info = debug.getinfo(o, "S")
-         -- info.name is nil because o is not a calling level
-         if info.what == "C" then
-            return string.format("%q", so .. ", C function")
-         else 
-            -- the information is defined through lines
-            return string.format("%q", so .. ", defined in (" ..
-                info.linedefined .. "-" .. info.lastlinedefined ..
-                ")" .. info.source)
-         end
-      elseif type(o) == "number" or type(o) == "boolean" then
-         return so
-      else
-         return string.format("%q", so)
-      end
-   end
 
-   local function addtocart (value, name, indent, saved, field)
-      indent = indent or ""
-      saved = saved or {}
-      field = field or name
+	local function find_heli_or_plane_group(name)
+	   for k, coalition_name in pairs({"red", "blue"}) do
+		  for country_id=1,#mission.coalition[coalition_name].country do
+			 for _, heli_or_plane in pairs({"helicopter", "plane"}) do
+				
+				if mission.coalition[coalition_name].country[country_id][heli_or_plane] then
+				   for group_id=1,#mission.coalition[coalition_name].country[country_id][heli_or_plane].group do
+					  if mission.coalition[coalition_name].country[country_id][heli_or_plane].group[group_id].name == name then
+						 return coalition_name, country_id, heli_or_plane, group_id
+						 --return "mission.coalition."..coalition_name..".country["..country_id.."].plane.group["..group_id.."]"
+					  end
+				   end
+				end
+				
+			 end
+		  end
+	   end
+	   return nil, nil, nil, nil
+	end
 
-      cart = cart .. indent .. field
 
-      if type(value) ~= "table" then
-         cart = cart .. " = " .. basicSerialize(value) .. ";\n"
-      else
-         if saved[value] then
-            cart = cart .. " = {}; -- " .. saved[value] 
-                        .. " (self reference)\n"
-            autoref = autoref ..  name .. " = " .. saved[value] .. ";\n"
-         else
-            saved[value] = name
-            --if tablecount(value) == 0 then
-            if isemptytable(value) then
-               cart = cart .. " = {};\n"
-            else
-               cart = cart .. " = {\n"
-               for k, v in pairs(value) do
-                  k = basicSerialize(k)
-                  local fname = string.format("%s[%s]", name, k)
-                  field = string.format("[%s]", k)
-                  -- three spaces between levels
-                  addtocart(v, fname, indent .. "   ", saved, field)
-               end
-               cart = cart .. indent .. "};\n"
-            end
-         end
-      end
-   end
 
-   name = name or "__unnamed__"
-   if type(t) ~= "table" then
-      return name .. " = " .. basicSerialize(t)
-   end
-   cart, autoref = "", ""
-   addtocart(t, name, indent)
-   return cart .. autoref
+	data = JSON:decode(ipc_get("data"))
+
+	local routes = {}
+	local second_waypoints_by_group_name = {}
+	for _, obj in pairs(data.objects) do
+	   if obj.type == "CLIENT_ACFT_ROUTE" then
+		  routes[obj.group_name] = obj.id
+		  local first_wpt = data.objects[obj.first_waypoint_id]
+		  if first_wpt.next_waypoint_id ~= "" then
+			 second_waypoints_by_group_name[obj.group_name] = data.objects[first_wpt.next_waypoint_id]
+		  end
+	   end
+	end
+
+
+	function update_waypoints(group, route, data)
+		  -- delete existing waypoints
+		  local points = group.route.points
+		  for i = #points,2,-1 do
+			 points[i] = nil
+		  end
+		  
+		  -- add new waypoints
+		  
+		  local wpt = second_waypoints_by_group_name[group_name]
+		  local i = 2
+		  while wpt do
+			 local n = i - 2
+			 local name = wpt.name
+			 if name == "" then name = nil end
+			 
+			 group.route.points[i] = {
+				["x"] = wpt.x,
+				["y"] = wpt.z,
+				["name"] = name,
+				["alt"] = wpt.alt,
+				["type"] = "Turning Point",
+				["action"] = "Turning Point",
+				["alt_type"] = wpt.alt_type,
+				["formation_template"] = "",
+				["properties"] = {
+				   ["vnav"] = 1,
+				   ["scale"] = 0,
+				   ["angle"] = 0,
+				   ["vangle"] = 0,
+				   ["steer"] = 2
+				},
+				["speed"] = 140,
+				["ETA_locked"] = false,
+				["task"] = {
+				   ["id"] = "ComboTask",
+				   ["params"] = {["tasks"] = {}}
+				},
+				["speed_locked"] = true
+			 }
+			 
+
+			 if wpt.next_waypoint_id == "" then
+				wpt = nil
+				break
+			 else
+				wpt = data.objects[wpt.next_waypoint_id]
+				i = i + 1
+			 end
+		  end
+	end
+
+	local updated_positions = {}
+	local delete_unit = {}
+	if data.missionState then
+	  for _, pu in pairs(data.missionState.position_updates) do
+		updated_positions[pu.unitId] = pu
+	  end
+	  for _, du in pairs(data.missionState.destroyed_units) do
+		delete_unit[du.unitId] = true
+	  end
+	end
+
+	   for k, coalition_name in pairs({"red", "blue"}) do
+		  for country_id=1,#mission.coalition[coalition_name].country do
+			 for _, category in pairs({"helicopter", "plane", "vehicle"}) do
+				
+				if mission.coalition[coalition_name].country[country_id][category] then
+				   for group_id=1,#mission.coalition[coalition_name].country[country_id][category].group do
+					  local group = mission.coalition[coalition_name].country[country_id][category].group[group_id]
+					  
+					  if routes[group.name] then
+						update_waypoints(group, routes[group.name], data)
+					  end
+					  
+					  local new_units = {}
+					  for _, unit in pairs(group.units) do
+						local pu = updated_positions[unit.unitId]
+						if pu then
+						  unit.x = pu.x
+						  unit.y = pu.y
+						  unit.heading = pu.heading
+						end
+						if not delete_unit[unit.unitId] then
+						  new_units[#new_units+1] = unit
+						end
+					  end
+					  group.units = new_units
+					  if #group.units > 0 then
+						group.route.points[1].x = group.units[1].x
+						group.route.points[1].y = group.units[1].y
+					  end
+					  
+				   end
+				end
+				
+			 end
+		  end
+	   end
+
 end
-
-
-
-
-
-
-
-
-
-local function find_heli_or_plane_group(name)
-   for k, coalition_name in pairs({"red", "blue"}) do
-      for country_id=1,#mission.coalition[coalition_name].country do
-         for _, heli_or_plane in pairs({"helicopter", "plane"}) do
-            
-            if mission.coalition[coalition_name].country[country_id][heli_or_plane] then
-               for group_id=1,#mission.coalition[coalition_name].country[country_id][heli_or_plane].group do
-                  if mission.coalition[coalition_name].country[country_id][heli_or_plane].group[group_id].name == name then
-                     return coalition_name, country_id, heli_or_plane, group_id
-                     --return "mission.coalition."..coalition_name..".country["..country_id.."].plane.group["..group_id.."]"
-                  end
-               end
-            end
-            
-         end
-      end
-   end
-   return nil, nil, nil, nil
-end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-data = JSON:decode(ipc_unescape(js.global.ipc.data))
-
-js.global.console.log("calculating routes")
-
-local routes = {}
-local second_waypoints_by_group_name = {}
-for _, obj in pairs(data.objects) do
-   if obj.type == "CLIENT_ACFT_ROUTE" then
-      routes[obj.group_name] = obj.id
-      local first_wpt = data.objects[obj.first_waypoint_id]
-      if first_wpt.next_waypoint_id ~= "" then
-         second_waypoints_by_group_name[obj.group_name] = data.objects[first_wpt.next_waypoint_id]
-      end
-   end
-end
-
---[[
-for group_name, route in pairs(routes) do
-   local coalition_name, country_id, heli_or_plane, group_id = find_heli_or_plane_group(group_name)
-   if coalition_name and country_id and heli_or_plane and group_id then -- there is a group with this name!
-      
-      -- delete existing waypoints
-      local points = mission.coalition[coalition_name].country[country_id][heli_or_plane].group[group_id].route.points
-      for i = #points,2,-1 do
-         points[i] = nil
-      end
-      
-      -- add new waypoints
-      
-      local wpt = second_waypoints_by_group_name[group_name]
-      local i = 2
-      while wpt do
-         local n = i - 2
-         local name = wpt.name
-         if name == "" then name = nil end
-         
-         mission.coalition[coalition_name].country[country_id][heli_or_plane].group[group_id].route.points[i] = {
-            ["x"] = wpt.x,
-            ["y"] = wpt.z,
-            ["name"] = name,
-            ["alt"] = wpt.alt,
-            ["type"] = "Turning Point",
-            ["action"] = "Turning Point",
-            ["alt_type"] = wpt.alt_type,
-            ["formation_template"] = "",
-            ["properties"] = {
-               ["vnav"] = 1,
-               ["scale"] = 0,
-               ["angle"] = 0,
-               ["vangle"] = 0,
-               ["steer"] = 2
-            },
-            ["speed"] = 140,
-            ["ETA_locked"] = false,
-            ["task"] = {
-               ["id"] = "ComboTask",
-               ["params"] = {["tasks"] = {}}
-            },
-            ["speed_locked"] = true
-         }
-         
-
-         if wpt.next_waypoint_id == "" then
-            wpt = nil
-            break
-         else
-            wpt = data.objects[wpt.next_waypoint_id]
-            i = i + 1
-         end
-      end
-   end
-end
-]]--
-
-
-
-function update_waypoints(group, route, data)
-      -- delete existing waypoints
-      local points = group.route.points
-      for i = #points,2,-1 do
-         points[i] = nil
-      end
-      
-      -- add new waypoints
-      
-      local wpt = second_waypoints_by_group_name[group_name]
-      local i = 2
-      while wpt do
-         local n = i - 2
-         local name = wpt.name
-         if name == "" then name = nil end
-         
-         group.route.points[i] = {
-            ["x"] = wpt.x,
-            ["y"] = wpt.z,
-            ["name"] = name,
-            ["alt"] = wpt.alt,
-            ["type"] = "Turning Point",
-            ["action"] = "Turning Point",
-            ["alt_type"] = wpt.alt_type,
-            ["formation_template"] = "",
-            ["properties"] = {
-               ["vnav"] = 1,
-               ["scale"] = 0,
-               ["angle"] = 0,
-               ["vangle"] = 0,
-               ["steer"] = 2
-            },
-            ["speed"] = 140,
-            ["ETA_locked"] = false,
-            ["task"] = {
-               ["id"] = "ComboTask",
-               ["params"] = {["tasks"] = {}}
-            },
-            ["speed_locked"] = true
-         }
-         
-
-         if wpt.next_waypoint_id == "" then
-            wpt = nil
-            break
-         else
-            wpt = data.objects[wpt.next_waypoint_id]
-            i = i + 1
-         end
-      end
-end
-
-
-
-
-
-
-js.global.console.log("calculating updated_positions, delete_unit")
-
-local updated_positions = {}
-local delete_unit = {}
-if data.missionState then
-  for _, pu in pairs(data.missionState.position_updates) do
-    updated_positions[pu.unitId] = pu
-  end
-  for _, du in pairs(data.missionState.destroyed_units) do
-    delete_unit[du.unitId] = true
-  end
-end
-
-js.global.console.log("big loop")
-
-   for k, coalition_name in pairs({"red", "blue"}) do
-      for country_id=1,#mission.coalition[coalition_name].country do
-         for _, category in pairs({"helicopter", "plane", "vehicle"}) do
-            
-            if mission.coalition[coalition_name].country[country_id][category] then
-               for group_id=1,#mission.coalition[coalition_name].country[country_id][category].group do
-                  local group = mission.coalition[coalition_name].country[country_id][category].group[group_id]
-				  
-				  js.global.console.log(group.name)
-				  
-				  
-				  if routes[group.name] then
-					update_waypoints(group, routes[group.name], data)
-				  end
-				  
-                  local new_units = {}
-                  for _, unit in pairs(group.units) do
-                    local pu = updated_positions[unit.unitId]
-                    if pu then
-                      unit.x = pu.x
-                      unit.y = pu.y
-                      unit.heading = pu.heading
-                    end
-                    if not delete_unit[unit.unitId] then
-                      new_units[#new_units+1] = unit
-                    end
-                  end
-                  group.units = new_units
-				  if #group.units > 0 then
-				    group.route.points[1].x = group.units[1].x
-					group.route.points[1].y = group.units[1].y
-				  end
-				  
-               end
-            end
-            
-         end
-      end
-   end
-
-
-js.global.console.log("serializing result")
-
-js.global.ipc.mission_str = ipc_escape(table.show(mission, 'mission'))
-
-js.global.console.log("done.")
+save_mission = save_impl
 		</span>
 		
 		<span id="json_lua" style="display: none;">
@@ -1418,17 +1241,493 @@ JSON = OBJDEF:new()
 
 		</span>
 		
-		
+		<span id="dump_lua" style="display: none;">
+--[[
+This serialization code is taken from prtr-dump.
+See http://piratery.net/dump/ for details.
+It can be redistributed under the following MIT-style license:
+
+Copyright (c) Jerome Vuarand
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+]]--
+
+do
+local _M = {}
+local _NAME = ... or 'test'
+
+local io = require 'io'
+local os = require 'os'
+local table = require 'table'
+local string = require 'string'
+
+_M.groupsize = 10000
+
+local dumptablecontent
+
+local tkeys = {
+	boolean = true,
+	number = true,
+	string = true,
+}
+local tvalues = {
+	boolean = true,
+	number = true,
+	string = true,
+	table = true,
+}
+
+local function dumptable(table, write, level)
+	-- prefix and suffix
+	local mt = getmetatable(table)
+	local prefix = mt and mt.__dump_prefix
+	local suffix = mt and mt.__dump_suffix
+	if type(prefix)=='function' then
+		prefix = prefix(table)
+	end
+	prefix = prefix or ""
+	if type(suffix)=='function' then
+		suffix = suffix(table)
+	end
+	suffix = suffix or ""
+	
+	-- count keys
+	local nkeys = 0
+	for k,v in pairs(table) do
+		nkeys = nkeys + 1
+		local tk,tv = type(k),type(v)
+		if not tkeys[tk] then
+			return nil,"unsupported key type '"..tk.."'"
+		end
+		if not tvalues[tv] then
+			return nil,"unsupported value type '"..tv.."'"
+		end
+	end
+	
+	-- if too many keys, use multiple closures
+	if nkeys > _M.groupsize then
+		local success,err
+		success,err = write(((prefix..[[
+(function()
+	local t = { function() return {
+]]):gsub("\n", "\n"..("\t"):rep(level))))
+		if not success then return nil,err end
+		success,err = dumptablecontent(table, write, level+2, _M.groupsize, ("\t"):rep(level+1)..'} end, function() return {\n')
+		if not success then return nil,err end
+		success,err = write((([[
+	} end }
+	local result = {}
+	for _,f in ipairs(t) do
+		for k,v in pairs(f()) do
+			result[k] = v
+		end
+	end
+	return result
+end)()]]..suffix):gsub("\n", "\n"..("\t"):rep(level))))
+		if not success then return nil,err end
+		return true
+	elseif nkeys==0 then
+		local success,err = write(prefix.."{ }"..suffix)
+		if not success then return nil,err end
+		return true
+	else
+		local success,err
+		success,err = write(prefix.."{\n")
+		if not success then return nil,err end
+		success,err = dumptablecontent(table, write, level+1)
+		if not success then return nil,err end
+		success,err = write(("\t"):rep(level).."}"..suffix)
+		if not success then return nil,err end
+		return true
+	end
+end
+
+local function dumpvalue(v, write, level)
+	local t = type(v)
+	if t=='string' then
+		return write('"'..v:gsub('[%z\1-\31\127"\\]', function(c)
+			if c=='\\' then
+				return '\\\\'
+			elseif c=='"' then
+				return '\\"'
+			elseif c=='\t' then
+				return '\\t'
+			elseif c=='\n' then
+				return '\\n'
+			elseif c=='\r' then
+				return '\\r'
+			else
+				return string.format('\\%03d', string.byte(c))
+			end
+		end)..'"')
+	elseif t=='number' then
+		if v~=v then -- nan
+			return write('0/0')
+		elseif v==1/0 then -- +inf
+			return write('1/0')
+		elseif v==-1/0 then -- -inf
+			return write('-1/0')
+		else
+			return write(tostring(v))
+		end
+	elseif t=='boolean' then
+		if v then
+			return write('true')
+		else
+			return write('false')
+		end
+	elseif t=='nil' then
+		return write('nil')
+	elseif t=='table' then
+		return dumptable(v, write, level)
+	else
+		return nil,"unsupported value type '"..t.."'"
+	end
+end
+
+local lua_keywords = {
+	['and'] = true,
+	['break'] = true,
+	['do'] = true,
+	['else'] = true,
+	['elseif'] = true,
+	['end'] = true,
+	['false'] = true,
+	['for'] = true,
+	['function'] = true,
+	['if'] = true,
+	['in'] = true,
+	['local'] = true,
+	['nil'] = true,
+	['not'] = true,
+	['or'] = true,
+	['repeat'] = true,
+	['return'] = true,
+	['then'] = true,
+	['true'] = true,
+	['until'] = true,
+	['while'] = true,
+}
+
+local function dumppair(k, v, write, level)
+	local success,err
+	success,err = write(("\t"):rep(level))
+	if not success then return nil,err end
+	local assignment = " = "
+	local tk = type(k)
+	if tk=='string' and k:match("^[_a-zA-Z][_a-zA-Z0-9]*$") and not lua_keywords[k] then
+		success,err = write(k)
+		if not success then return nil,err end
+	elseif tk=='string' or tk=='number' or tk=='boolean' then
+		success,err = write('[')
+		if not success then return nil,err end
+		success,err = dumpvalue(k, write, level)
+		if not success then return nil,err end
+		success,err = write(']')
+		if not success then return nil,err end
+	elseif tk=='nil' then
+		-- we are in the array part
+		assignment = ""
+	else
+		error("unsupported key type '"..type(k).."'")
+	end
+	success,err = write(assignment)
+	if not success then return nil,err end
+	success,err = dumpvalue(v, write, level)
+	if not success then return nil,err end
+	success,err = write(",\n")
+	if not success then return nil,err end
+	return true
+end
+
+local function keycomp(a, b)
+	local ta,tb = type(a),type(b)
+	if ta==tb then
+		return a < b
+	else
+		return ta=='string'
+	end
+end
+
+local tsort = table.sort
+local function dumptablesection(table, write, level, keys, state)
+	-- sort keys
+	local skeys = {}
+	for k in pairs(keys) do skeys[#skeys+1] = k end
+	tsort(skeys, keycomp)
+	-- dump pairs
+	for _,k in pairs(skeys) do
+		local v = table[k]
+		if state then
+			state.i = state.i + 1
+			if state.i % state.size == 0 then
+				local success,err = write(state.sep)
+				if not success then return nil,err end
+			end
+		end
+		local success,err = dumppair(k, v, write, level)
+		if not success then return nil,err end
+	end
+	return true
+end
+
+local function dumptableimplicitsection(table, write, level, state)
+	for k,v in ipairs(table) do
+		if state then
+			state.i = state.i + 1
+			if state.i % state.size == 0 then
+				local success,err = write(state.sep)
+				if not success then return nil,err end
+			end
+		end
+		local success,err
+		if state then
+			success,err = dumppair(k, v, write, level)
+		else
+			success,err = dumppair(nil, v, write, level)
+		end
+		if not success then return nil,err end
+	end
+	return true
+end
+
+function dumptablecontent(table, write, level, groupsize, groupsep)
+	-- order of groups:
+	-- - explicit keys
+	--   - keys with simple values
+	--   - keys with structure values (table with only explicit keys)
+	--   - keys with mixed values (table with both exiplicit and implicit keys)
+	--   - keys with array values (table with only implicit keys)
+	-- - set part (explicit key with boolean value)
+	-- - implicit keys
+	-- order within a group:
+	-- - string keys in lexicographic order
+	-- - numbers in increasing order
+	-- :TODO: handle tables as keys
+	-- :TODO: handle sets
+	
+	-- extract implicit keys
+	local implicit = {}
+	for k,v in ipairs(table) do
+		implicit[k] = true
+	end
+	-- categorize explicit keys
+	local set = {}
+	local simples = {}
+	local structures = {}
+	local mixeds = {}
+	local arrays = {}
+	for k,v in pairs(table) do
+		if not implicit[k] then
+			if type(v)=='table' then
+				if v[1]==nil then
+					structures[k] = true
+				else
+					local implicit = {}
+					for k in ipairs(v) do
+						implicit[k] = true
+					end
+					local mixed = false
+					for k in pairs(v) do
+						if not implicit[k] then
+							mixed = true
+							break
+						end
+					end
+					if mixed then
+						mixeds[k] = true
+					else
+						arrays[k] = true
+					end
+				end
+			else
+				simples[k] = true
+			end
+		end
+	end
+	
+	local success,err,state
+	if groupsize and groupsep then
+		state = {
+			i = 0,
+			size = groupsize,
+			sep = groupsep,
+		}
+	end
+	success,err = dumptablesection(table, write, level, simples, state)
+	if not success then return nil,err end
+	success,err = dumptablesection(table, write, level, structures, state)
+	if not success then return nil,err end
+	success,err = dumptablesection(table, write, level, mixeds, state)
+	if not success then return nil,err end
+	success,err = dumptablesection(table, write, level, arrays, state)
+	if not success then return nil,err end
+	success,err = dumptableimplicitsection(table, write, level, state)
+	if not success then return nil,err end
+	return true
+	
+	--[[
+	local done = {}
+	for k,v in ipairs(table) do
+		local success,err = dumppair(nil, v, write, level)
+		if not success then return nil,err end
+		done[k] = true
+	end
+	for k,v in pairs(table) do
+		if not done[k] then
+			local success,err = dumppair(k, v, write, level)
+			if not success then return nil,err end
+			done[k] = true
+		end
+	end
+	return true
+	--]]
+end
+
+function _M.tostring(value)
+	local t = {}
+	local success,err = dumpvalue(value, function(str) table.insert(t, str); return true end, 0)
+	if not success then return nil,err end
+	return table.concat(t)
+end
+
+function _M.tofile(value, file)
+	local filename
+	if type(file)=='string' then
+		filename = file
+		file = nil
+	end
+	local success,err
+	if filename then
+		file,err = io.open(filename, 'wb')
+		if not file then return nil,err end
+	end
+	success,err = file:write"return "
+	if not success then return nil,err end
+	success,err = dumpvalue(value, function(...) return file:write(...) end, 0)
+	if not success then return nil,err end
+	success,err = file:write("\n-- v".."i: ft=lua\n")
+	if not success then return nil,err end
+	if filename then
+		success,err = file:close()
+		if not success then return nil,err end
+	end
+	return true
+end
+
+function _M.tofile_safe(value, filename, oldsuffix)
+	local lfs = require 'lfs'
+	
+	if oldsuffix and lfs.attributes(filename, 'mode') then
+		local i,suffix = 0,oldsuffix
+		while io.open(filename..suffix, "rb") do
+			i = i+1
+			suffix = oldsuffix..i
+		end
+		assert(os.rename(filename, filename..suffix))
+	end
+	local tmpfilename = filename..'.new'
+	local err,file,success
+	file,err = io.open(tmpfilename, "wb")
+	if not file then return nil,err end
+	success,err = _M.tofile(value, file)
+	if not success then
+		file:close()
+		os.remove(tmpfilename)
+		return nil,err
+	end
+	success,err = file:close()
+	if not success then
+		os.remove(tmpfilename)
+		return nil,err
+	end
+	if lfs.attributes(filename, 'mode') then
+		assert(os.remove(filename))
+	end
+	assert(os.rename(tmpfilename, filename))
+	return true
+end
+
+if _NAME=='test' then
+	local str = [[
+return {
+	Abc = false,
+	FOO = 42,
+	Foo = "42",
+	abc = true,
+	["f O"] = 42,
+	fOO = 42,
+	foo = "42",
+	[-1] = 37,
+	[0] = 37,
+	[42] = 37,
+	Bar = {
+		foo = 142,
+	},
+	bar = {
+		foo = 142,
+	},
+	Baz = {
+		foo = 242,
+		237,
+	},
+	baz = {
+		foo = 242,
+		237,
+	},
+	Baf = {
+		337,
+	},
+	baf = {
+		337,
+	},
+	37,
+}
+-- v]]..[[i: ft=lua
+]]
+	local t
+	if _VERSION=="Lua 5.1" then
+		t = assert(loadstring(str))()
+	elseif _VERSION=="Lua 5.2" then
+		t = assert(load(str))()
+	else
+		error("unsupported Lua version")
+	end
+
+end
+
+DUMP = _M
+end
+		</span>
 		
 		
 		<script src="vendors/zip.js/WebContent/zip.js"></script>
 		<script src="vendors/zip.js/WebContent/inflate.js"></script>
 		<script src="vendors/zip.js/WebContent/deflate.js"></script>
 		<script src="vendors/zip.js/WebContent/zip-fs.js"></script>
-		<script src="vendors/lua.vm.js/lua.vm.js"></script>
+		<script src="vendors/weblua/build/weblua-0.1.5.js"></script>
 		<script src="vendors/jquery/dist/jquery.min.js"></script>
 		<script src="vendors/spark-md5/spark-md5.min.js"></script>
+		
 		<script src="js/luautil.js"></script>
 		<script src="js/admintool.js"></script>
+		
 	</body>
 </html>

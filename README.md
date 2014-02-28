@@ -16,7 +16,7 @@ are governed by the licenses found in the respective
 subdirectories. They include:
 
 * jQuery (github.com/jquery/jquery, MIT-style)
-* lua.vm.js (github.com/kripken/lua.vm.js, MIT-style)
+* weblua (github.com/campadrenalin/weblua, exact license unclear; must be MIT-compatible since Lua itself is MIT-licensed)
 * OpenLayers (github.com/openlayers/openlayers, see license.txt)
 * proj4js (github.com/proj4js/proj4js, MIT-style)
 * spark-md5 (github.com/satazor/SparkMD5, WTFPL)

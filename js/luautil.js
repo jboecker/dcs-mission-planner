@@ -1,53 +1,6 @@
-function ipc_unescape(str) {
-	str = str.replace(/>t/g, "\t");
-	str = str.replace(/>n/g, "\n");
-	str = str.replace(/>r/g, "\r");
-	str = str.replace(/>a/g, "'");
-	str = str.replace(/>q/g, '"');
-	str = str.replace(/>b/g, "\\");
-	str = str.replace(/>g/g, ">");
-	return str;
-}
 
-function ipc_escape(str) {
-	str = str.replace(/>/g, ">g");
-	str = str.replace(/\\t/g, ">t");
-	str = str.replace(/\\n/g, ">n");
-	str = str.replace(/\\r/g, ">r");
-	str = str.replace(/'/g, ">a");
-	str = str.replace(/"/g, ">q");
-	str = str.replace(/\\\\/g, ">b");
-	return str;
-}
-
-Lua.execute('\n\
-function ipc_escape(mstr)\n\
-	mstr = string.gsub(mstr, string.char(62), ">g")\n\
-	mstr = string.gsub(mstr, string.char(9), ">t")\n\
-	mstr = string.gsub(mstr, string.char(10), ">n")\n\
-	mstr = string.gsub(mstr, string.char(13), ">r")\n\
-	mstr = string.gsub(mstr, string.char(39), ">a")\n\
-	mstr = string.gsub(mstr, string.char(34), ">q")\n\
-	mstr = string.gsub(mstr, string.char(92), ">b")\n\
-	return mstr\n\
-end\n\
-');
-
-Lua.execute('\n\
-function ipc_unescape(mstr)\n\
-	mstr = string.gsub(mstr, ">t", string.char(9))\n\
-	mstr = string.gsub(mstr, ">n", string.char(10))\n\
-	mstr = string.gsub(mstr, ">r", string.char(13))\n\
-	mstr = string.gsub(mstr, ">a", string.char(39))\n\
-	mstr = string.gsub(mstr, ">q", string.char(34))\n\
-	mstr = string.gsub(mstr, ">b", string.char(92))\n\
-	mstr = string.gsub(mstr, ">g", string.char(62))\n\
-	return mstr\n\
-end\n\
-');
-
-
-Lua.execute('\n\
+function load_table_show() {
+Lua.exec('\n\
 function table.show(t, name, indent)\n\
    local cart     -- a container\n\
    local autoref  -- for self references\n\
@@ -118,3 +71,4 @@ function table.show(t, name, indent)\n\
    return cart .. autoref\n\
 end\n\
 ');
+}

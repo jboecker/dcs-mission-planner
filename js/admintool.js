@@ -1,9 +1,8 @@
 var WEBSOCKET_URL = "wss://dcs-mission-planner.herokuapp.com/websocket/";
-Lua.execute($("#json_lua").text())
 
+var ipc = {}
 zip.useWebWorkers = false;
-ipc = {}
-var fs = new zip.fs.FS();
+var zipfs = new zip.fs.FS();
 var md5hash;
 
 function set_status(text) {
@@ -15,6 +14,17 @@ function set_status(text) {
 }
 
 $(function() {
+	Lua.initialize();
+	load_table_show();
+	Lua.inject(function(k, v) { ipc[k] = v; return []; }, "ipc_set");
+	Lua.inject(function(k) { return [ipc[k]];}, "ipc_get");
+	Lua.inject(function(s) { console.log(s); return []; }, "js_log");
+
+	Lua.exec($("#dump_lua").text())
+	Lua.exec($("#json_lua").text())
+	Lua.exec($("#load_mission_lua").text());
+	Lua.exec($("#save_mission_lua").text());
+
 	$("#noscript").hide();
 	$("#step1").show();
 	
@@ -37,14 +47,14 @@ $(function() {
 		var file = document.getElementById("file-input").files[0];
 		var filename = document.getElementById("file-input").files[0].name;
 		set_status("reading file...");
-		fs.importBlob(file, function() {
-			$("#status").text("extracting mission...");
-			fs.find("mission").getText(function(luaCode) {
-				$("#status").text("processing mission...");
-				Lua.execute(luaCode);
-				Lua.execute($("#load_mission_lua").text());
-				var data = JSON.parse(ipc_unescape(ipc.data));
-				$("#status").text("opening websocket...");
+		zipfs.importBlob(file, function() {
+			set_status("extracting mission...");
+			zipfs.find("mission").getText(function(luaCode) {
+				set_status("processing mission...");
+				Lua.exec(luaCode);
+				Lua.exec("load_mission()");
+				var data = JSON.parse(ipc.data);
+				set_status("opening websocket...");
 				var ws = new WebSocket(WEBSOCKET_URL);
 				ws.onopen = function() {
 					set_status("uploading data...");
@@ -82,13 +92,13 @@ $(function() {
 		var file = document.getElementById("file-input").files[0];
 		var filename = document.getElementById("file-input").files[0].name;
 		set_status("extracting mission...");
-		fs.importBlob(file, function() {
-			fs.find("mission").getText(function(luaCode) {
-				Lua.execute(luaCode);
+		zipfs.importBlob(file, function() {
+			zipfs.find("mission").getText(function(luaCode) {
 				set_status("loading mission...");
+				Lua.exec(luaCode);
 				
-				fs.importBlob(file, function() {
-					fs.remove(fs.find("mission"));
+				zipfs.importBlob(file, function() {
+					zipfs.remove(zipfs.find("mission"));
 					
 					set_status("opening websocket...");
 					var ws = new WebSocket(WEBSOCKET_URL);
@@ -111,25 +121,31 @@ $(function() {
 						if (data.md5hash != md5hash) {
 							alert('Instance "'+$("#instance_id-input").val()+'" was created from another mission file, which was named "'+data.filename+'".\nSaving the waypoint data using a different mission as a template may or may not work.');
 						}
-						$("#status").text("processing response (2/3)...");
-						ipc.data = ipc_escape(JSON.stringify(data.data));
-						Lua.execute($("#save_mission_lua").text());
-						var mission_str = ipc_unescape(ipc.mission_str);
-						
-						$("#status").text("processing response (3/3)...");
-						fs.root.addText("mission", mission_str);
-						
-						$("#status").text("opening download dialog.");
-						fs.exportBlob(function(blob) {
-							window.theblob = blob; // keep a reference
-							if (window.navigator.msSaveBlob) {
-								$("#status").text("showing download dialog.");
-								window.navigator.msSaveBlob(blob, filename);
-							} else {
-								var blobURL = URL.createObjectURL(blob);
-								$("#status").html('<a href="'+blobURL+'" download="'+filename+'" target="tab">Save Result</a>');
-							}
-						});
+						set_status("processing response [updaing mission data]...");
+						ipc.data = JSON.stringify(data.data);
+						Lua.exec("save_mission()");
+						set_status("processing response [serializing mission data]...");
+						setTimeout(function() {
+							Lua.exec("ipc_set('mission_str', 'mission = ' .. DUMP.tostring(mission, 'mission'))")
+							var mission_str = ipc.mission_str;
+							
+							setTimeout(function() {
+								set_status("processing response [compressing mission file]...");
+								zipfs.root.addText("mission", mission_str);
+								
+								set_status("opening download dialog.");
+								zipfs.exportBlob(function(blob) {
+									window.theblob = blob; // keep a reference
+									if (window.navigator.msSaveBlob) {
+										set_status("showing download dialog.");
+										window.navigator.msSaveBlob(blob, filename);
+									} else {
+										var blobURL = URL.createObjectURL(blob);
+										$("#status").html('<a href="'+blobURL+'" download="'+filename+'" target="tab">Save Result</a>');
+									}
+								});
+							}, 20);
+						}, 20);
 					}
 				});
 					
