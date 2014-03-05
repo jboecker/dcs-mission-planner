@@ -1,0 +1,8 @@
+*.swp
+lua-5.2.1*
+closure*
+*.o
+*.a
+*.a.ll
+*.so
+*.so.ll
