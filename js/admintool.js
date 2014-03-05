@@ -54,7 +54,6 @@ $(function() {
 			set_status("extracting mission...");
 			zipfs.find("mission").getText(function(luaCode) {
 				set_status("processing mission...");
-				luaCode = luaCode.replace(/[^\x00-\x7F]/g, "?"); // work around https://github.com/campadrenalin/weblua/issues/17
 				Lua.exec(luaCode);
 				Lua.exec("load_mission()");
 				var data = JSON.parse(ipc.data);
