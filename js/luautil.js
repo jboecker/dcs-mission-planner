@@ -1,3 +1,4 @@
+Lua.set_lua_string_to_js(function(arr) { return (new StringView(arr)).toString(); });
 
 function load_table_show() {
 Lua.exec('\n\
