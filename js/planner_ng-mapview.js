@@ -85,14 +85,14 @@ mp.MapView = function(map_type) {
 			renderers: ["Canvas"],
 			projection: "EPSG:4326",
 			styleMap: new OpenLayers.StyleMap({
-				"UNIT_AIRDEFENCE": new OpenLayers.Style(OpenLayers.Util.applyDefaults({
-					externalGraphic: 'vendors/wikimedia-commons/AIRDEFENCE.svg',
+				"UNIT_AIRDEFENCE_red": new OpenLayers.Style(OpenLayers.Util.applyDefaults({
+					externalGraphic: 'vendors/wikimedia-commons/AIRDEFENCE_RED.svg',
 					graphicWidth: 34,
 					graphicHeight: 20,
 					fillOpacity: 1,
 				}, OpenLayers.Feature.Vector.style["default"])),
-				"UNIT_ARMOR": new OpenLayers.Style(OpenLayers.Util.applyDefaults({
-					externalGraphic: 'vendors/wikimedia-commons/ARMOR.svg',
+				"UNIT_ARMOR_red": new OpenLayers.Style(OpenLayers.Util.applyDefaults({
+					externalGraphic: 'vendors/wikimedia-commons/ARMOR_RED.svg',
 					graphicWidth: 34,
 					graphicHeight: 20,
 					fillOpacity: 1,
@@ -101,6 +101,18 @@ mp.MapView = function(map_type) {
 					externalGraphic: 'vendors/wikimedia-commons/bullseye_${coalition}.svg',
 					graphicWidth: 30,
 					graphicHeight: 30,
+					fillOpacity: 1,
+				}, OpenLayers.Feature.Vector.style["default"])),
+				'UNIT_AIRDEFENCE_blue': new OpenLayers.Style(OpenLayers.Util.applyDefaults({
+					externalGraphic: 'vendors/wikimedia-commons/AIRDEFENCE_BLUE.svg',
+					graphicWidth: 34,
+					graphicHeight: 20,
+					fillOpacity: 1,
+				}, OpenLayers.Feature.Vector.style["default"])),
+				'UNIT_ARMOR_blue': new OpenLayers.Style(OpenLayers.Util.applyDefaults({
+					externalGraphic: 'vendors/wikimedia-commons/ARMOR_BLUE.svg',
+					graphicWidth: 34,
+					graphicHeight: 20,
 					fillOpacity: 1,
 				}, OpenLayers.Feature.Vector.style["default"])),
 			}),
