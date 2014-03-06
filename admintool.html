@@ -138,14 +138,14 @@ function load_mission()
 					for _, group in ipairs(country.vehicle.group) do
 						if group.name:match("MP_AIRDEFENCE") then
 							unit_annotations[#unit_annotations+1] = {
-								["type"] = 'AIRDEFENCE',
+								["type"] = 'AIRDEFENCE_'..coalition_name,
 								["x"] = group.route.points[1].x,
 								["z"] = group.route.points[1].y,
 							}
 						end
 						if group.name:match("MP_ARMOR") then
 							unit_annotations[#unit_annotations+1] = {
-								["type"] = 'ARMOR',
+								["type"] = 'ARMOR_'..coalition_name,
 								["x"] = group.route.points[1].x,
 								["z"] = group.route.points[1].y,
 							}
