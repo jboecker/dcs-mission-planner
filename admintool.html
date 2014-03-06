@@ -177,7 +177,8 @@ function load_mission()
 	   local client_acft_route = {
 		  id = new_id(),
 		  type = "CLIENT_ACFT_ROUTE",
-		  group_name = group.name ,
+		  group_name = group.name,
+		  unittype = group.units[1].type,
 		  visibility = groupid_to_coalition[group.groupId]
 	   }
 	   data.objects[client_acft_route.id] = client_acft_route

@@ -53,14 +53,28 @@ $(function() {
 				mp.model = new mp.Model(result.id_prefix, result.data);
 				
 				var routes_found = false;
+				var routes = [];
 				$.each(mp.model.objects, function(_, obj) {
 					if (obj.type == "CLIENT_ACFT_ROUTE") {
+						routes.push([obj.id, '['+obj.unittype+'] '+obj.group_name]);
 						routes_found = true;
-						$("#activeroute").append($("<option>").attr("value", obj.id).text(obj.group_name));
-						$("#copyroute_from").append($("<option>").attr("value", obj.id).text(obj.group_name));
 					}
 				});
-				
+				routes.sort(function(a, b) {
+					if (a[1] < b[1]) {
+						return -1;
+					} else if (a[1] > b[1]) {
+						return 1;
+					} else {
+						return 0;
+					}
+				});
+				for (var i=0; i<routes.length; i++) {
+					var id_name_array = routes[i];
+					$("#activeroute").append($("<option>").attr("value", id_name_array[0]).text(id_name_array[1]));
+					$("#copyroute_from").append($("<option>").attr("value", id_name_array[0]).text(id_name_array[1]));
+				}
+					
 				if (!routes_found) {
 					return abort_connect("Error: The "+coalition+" side has no routes to edit.");
 				}
