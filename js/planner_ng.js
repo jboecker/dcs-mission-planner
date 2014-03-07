@@ -103,7 +103,7 @@ $(function() {
 				$("#briefing_content").append($("<h1>Red Task</h1>"));
 				$("#briefing_content").append($("<pre>").text(result.data.redTask));
 				
-				$("#connect_status").text("Instance: "+$("#connect_instance_id").val());
+				$("#connect_status").text("Instance: "+instance_id);
 				$("#controls").show();
             },
         });
