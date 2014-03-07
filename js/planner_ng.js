@@ -1,6 +1,6 @@
 mp = mp || {};
 mp.settings = {};
-mp.settings.websocket_url = "wss://dcs-mission-planner.herokuapp.com/websocket/";
+mp.settings.websocket_url = "";
 
 $.support.cors = true;
 $(function() {
@@ -115,6 +115,7 @@ $(function() {
 		var ws_uri = new URI();
 		ws_uri.scheme(u.scheme() == "https" ? "wss" : "ws").host(u.host()).path("/websocket/");
 		mp.settings.websocket_url = ws_uri.toString();
+		mp.settings.server_base_url = (new URI()).scheme(u.scheme()).host(u.host()).path("/").toString();
 		
 		connect(u.query(true).instance_id, u.username(), u.password());
 	});
