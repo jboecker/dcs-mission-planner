@@ -22,3 +22,4 @@ subdirectories. They include:
 * spark-md5 (github.com/satazor/SparkMD5, WTFPL)
 * zip.js (github.com/gildas-lormeau/zip.js, BSD)
 * StringView ([see developer.mozilla.org](https://developer.mozilla.org/en-US/Add-ons/Code_snippets/StringView), GPLv3)
+* URI.js (http://medialize.github.com/URI.js/, MIT)

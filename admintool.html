@@ -8,28 +8,31 @@
 				font-size: 10pt;
 			}
 			
-			#step1, #step2 {
+			.step {
 				display: none;
 			}
 			
-			#red-pw-td { color: red; }
-			#blue-pw-td { color: blue; }
+			#server-input {
+				width: 25em;
+			}
 			
-			#instance-id-td, #red-pw-td, #blue-pw-td, #admin-pw-td {
+			#red-url, red-url:visited { color: red; }
+			#blue-url, blue-url:visited { color: blue; }
+			#admin-url, admin-url:visited { color: black; }
+			
+			#instance-id-td, #red-url, #blue-url, #admin-url {
 				font-family: monospace;
 				font-size: 12pt;
 				font-weight: bold;
+				text-decoration: none;
+			}
+			#red-url:hover, #blue-url:hover, #admin-url:hover {
+				text-decoration: underline;
 			}
 			
-			table#instance_info {
-				border-radius: 3px;
-				border: 3px solid grey;
-				padding: 3px;
-			}
-			
-			table#instance_info td.th {
-				text-align: right;
-				font-weight: 100%;
+			#task_choice_table tr td {
+				text-align: center;
+				max-width: 300px;
 			}
 		</style>
 	</head>
@@ -39,44 +42,63 @@
 			JavaScript is not enabled. If you are using Internet Explorer, look for a bar at the bottom of the screen that asks you to allow blocked content.
 		</div>
 		<div id="step-container">
-			<div id="step1">
-				<h2>Choose a Mission File (.miz)</h2>
-				<input type="file" accept="application/zip" id="file-input">
-			</div>
-			<div id="step2">
-				<h2 id="filename-h2"></h2>
-				<table style="border-spacing: 40px 2px;">
-				<tr><td style="text-align: center"><h3>Create New Instance</h3></td><td style="text-align: center"><h3>Save Mission</h3></td>
-				<tr>
-				<td id="create_instance_td" style="vertical-align: top;">
-					<table>
-						<tr><td><input type="checkbox" id="no_passwords-input"><label for="no_passwords-input">Do not set passwords</label></td></tr>
-						<tr><td><button id="create-instance-button">Create Instance</button></td></tr>
-						<tr><td>&nbsp;</td></tr>
-						<tr><td>
-							<table id="instance_info" style="visibility: hidden;">
-								<tr><td class="th">Instance ID: </td><td id="instance-id-td"></td></tr>
-								<tr><td class="th">Red Password: </td><td id="red-pw-td"></td></tr>
-								<tr><td class="th">Blue Password: </td><td id="blue-pw-td"></td></tr>
-								<tr><td class="th">Admin Password: </td><td id="admin-pw-td"></td></tr>
-							</table>
-						</td></tr>
-					</table>
-				</td>
-				<td id="save_mission_td" style="vertical-align: top;">
-					<table>
-						<tr><th>Instance ID:</th><td><input type="text" id="instance_id-input"></td></tr>
-						<tr><th>Admin Password:</td><td><input type="text" id="admin_pw-input"></td></tr>
-						<tr><th></th><td><button id="save-mission-button">Save Mission</button></td></tr>
-						<tr><th></th><td>&nbsp;</td></tr>
-						<tr><th>Mission State:</th><td><input type="file" accept="text/plain" id="state-input"></td></tr>
-						<tr><th></th><td><button id="upload_mission_state_button">Upload Mission State</button></td></tr>
-					</table>
-				</td>
-				</tr>
+			<div id="task_choice" class="step">
+				<h2>What do you want to do?</h2>
+				<table id="task_choice_table">
+					<tr><td><h3>Create New Instance</h3></td><td><h3>Connect to Existing Instance</h3></td></tr>
+					<tr>
+						<td>
+						<p>Select a .miz file and create a new instance of this mission on the server to connect to using the Mission Planner.</p>
+						</td>
+						<td>
+						<p>Connect to an existing instance to save your mission or upload livery data.</p>
+						</td>
+					</tr>
+					<tr>
+						<td><button id="create_instance_choice">New Instance</button></td>
+						<td><button id="existing_instance_choice">Existing Instance</button></td>
+					</tr>
 				</table>
 			</div>
-		</div>
+			<div id="create_input_step1" class="step">
+				<table>
+					<h3>Select the Misson File to Continue</h3>
+					<tr><th>Server: </th><td><input type="text" id="server-input"/></td></tr>
+					<tr><th>Mission File (.miz): </th><td><input type="file" id="file-input"></td></tr>
+				</table>
+			</div>
+			<div id="create_input_step2" class="step">
+				<h2 class="filename-h2"></h2>
+				<table>
+					<tr><td><input type="checkbox" id="no_passwords-input"><label for="no_passwords-input">Do not set passwords</label></td></tr>
+					<tr><td><button id="create-instance-button">Create Instance</button></td></tr>
+				</table>
+			</div>
+			
+			<div id="connect_existing_step1" class="step">
+				<h3>Enter Admin URL</h3>
+				<form id="connect_existing_form">
+				<table>
+					<tr><th>Admin URL: </th><td><input id="admin-url-input" type="text"></td></tr>
+					<tr><th></th><td><input type="submit" value="Connect"></input></td></tr>
+				</table>
+				</form>
+			</div>
+			<div id="connect_existing_step2" class="step">
+				<h2 class="filename-h2"></h2>
+				<table>
+					<tr><th>Instance ID: </th><td id="instance-id-td"></td></tr>
+					<tr><th>Admin URL: </th><td><a id="admin-url" href="#"></a></td></tr>
+					<tr><th>Red URL: </th><td><a id="red-url" href="#"></a></td></tr>
+					<tr><th>Blue URL: </th><td><a id="blue-url" href="#"></a></td></tr>
+					<tr><th></th><td>&nbsp;</td></tr>
+					<tr><th>Mission File: </th><td id="save-file-input-td"><!-- input element will be moved here by JavaScript --></td></tr>
+					<tr><th></th><td><button id="save-mission-button">Save Mission</button></td></tr>
+					<tr><th></th><td>&nbsp;</td></tr>
+					<tr><th>Mission State:</th><td><input type="file" accept="text/plain" id="state-input"></td></tr>
+					<tr><th></th><td><button id="upload_mission_state_button">Upload Mission State</button></td></tr>
+				</table>
+			</div>
 		<hr>
 		<div id="status"></div>
 		<span id="load_mission_lua" style="display: none;">
@@ -179,6 +201,7 @@ function load_mission()
 		  type = "CLIENT_ACFT_ROUTE",
 		  group_name = group.name,
 		  unittype = group.units[1].type,
+		  livery_id = group.units[1].livery_id,
 		  visibility = groupid_to_coalition[group.groupId]
 	   }
 	   data.objects[client_acft_route.id] = client_acft_route
@@ -352,6 +375,7 @@ function save_impl()
 					  
 					  if routes[group.name] then
 						update_waypoints(group, routes[group.name], data)
+						if routes[group.name].livery_id then group.units[1].livery_id = routes[group.name].livery_id end
 					  end
 					  
 					  local new_units = {}
@@ -1727,6 +1751,7 @@ end
 		<script src="vendors/jquery/dist/jquery.min.js"></script>
 		<script src="vendors/spark-md5/spark-md5.min.js"></script>
 		<script src="vendors/stringview/stringview.js"></script>
+		<script src="vendors/URI.js/URI.js"></script>
 		
 		<script src="js/luautil.js"></script>
 		<script src="js/admintool.js"></script>

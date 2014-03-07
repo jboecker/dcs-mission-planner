@@ -17,11 +17,12 @@
 			JavaScript is not enabled. If you are using Internet Explorer, look for a bar at the bottom of the screen that asks you to allow blocked content.
 	  </div>
       <div id="connect_controls" style="display: none;">
+		<form id="connect_form">
         <table>
-          <tr><td>Instance ID:</td><td><input type="text" id="connect_instance_id"/></td></tr>
-          <tr><td>Password:</td><td><input type="text" id="connect_password"/></td></tr>
-          <tr><td colspan="2"><button id="connect_red_button">Connect on Red Side</button><button id="connect_blue_button">Connect on Blue Side</button></td></tr>
+          <tr><th>URL: </th><td><input type="text" id="connect_url_input"></td></tr>
+		  <tr><th></th><td><input type="submit" value="Connect"></input></td></tr>
         </table>
+		</form>
       </div>
 
       <div id="dcs_map_info" style="display: none;">
@@ -148,6 +149,7 @@
     <script src="vendors/proj4js/dist/proj4.js"></script>
     <script src="vendors/jquery/dist/jquery.min.js"></script>
     <script src="vendors/openlayers/build/OpenLayers.js"></script>
+	<script src="vendors/URI.js/URI.js"></script>
     
     <script>var mp = { debug: {} };</script>
     <script src="js/planner_ng-api.js"></script>

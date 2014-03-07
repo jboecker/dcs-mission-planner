@@ -6,6 +6,7 @@ $.support.cors = true;
 $(function() {
 	$("#noscript").hide();
 	$("#connect_controls").show();
+	$("#connect_url_input").focus();
     
 	if (mp.MAPPACK_VERSION && mp.MAPPACK_VERSION == 1) {
 		mp.settings.default_map = 'dcs';
@@ -108,20 +109,15 @@ $(function() {
         });
     }
     
-    $("#connect_red_button").click(function(e) {
-        if (e.shiftKey) {
-            mp.settings.websocket_url = "ws://localhost:5000/websocket/";
-        }
-        connect($("#connect_instance_id").val(), "red", $("#connect_password").val());
-    });
-    
-    $("#connect_blue_button").click(function(e) {
-        if (e.shiftKey) {
-            mp.settings.websocket_url = "ws://localhost:5000/websocket/";
-        }
-        console.log(e);
-        connect($("#connect_instance_id").val(), "blue", $("#connect_password").val());
-    });
+	$("#connect_form").submit(function(e) {
+		e.preventDefault();
+		var u = new URI($("#connect_url_input").val());
+		var ws_uri = new URI();
+		ws_uri.scheme(u.scheme() == "https" ? "wss" : "ws").host(u.host()).path("/websocket/");
+		mp.settings.websocket_url = ws_uri.toString();
+		
+		connect(u.query(true).instance_id, u.username(), u.password());
+	});
 
     $(document).on("heartbeat", function() {
 		var ind = $("#update_indicator")[0];

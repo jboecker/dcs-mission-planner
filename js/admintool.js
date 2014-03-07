@@ -1,4 +1,7 @@
-var WEBSOCKET_URL = "wss://dcs-mission-planner.herokuapp.com/websocket/";
+var DEFAULT_SERVER = "http://dcs-mission-planner.combined-ops-group.com:8080";
+var USE_SSL = false; // whether to use ws: / http: or wss: / https: schemes
+var ADMIN_URI = null;
+var WEBSOCKET_URI = null;
 
 var ipc = {}
 zip.useWebWorkers = false;
@@ -14,6 +17,8 @@ function set_status(text) {
 }
 
 $(function() {
+	$("#server-input").val(DEFAULT_SERVER);
+	
 	Lua.initialize();
 	load_table_show();
 	Lua.inject(function(k, v) { ipc[k] = v; return []; }, "ipc_set");
@@ -26,10 +31,20 @@ $(function() {
 	Lua.exec($("#save_mission_lua").text());
 
 	$("#noscript").hide();
-	$("#step1").show();
+	$("#task_choice").show();
+	
+	$("#create_instance_choice").click(function() {
+		$("#task_choice").hide();
+		$("#create_input_step1").show();
+	});
 	
 	$("#file-input").change(function() {
-		$("#step1").hide();
+		var server_uri = URI($("#server-input").val());
+		USE_SSL = !!(server_uri.scheme() == "https");
+		WEBSOCKET_URI = new URI().host(server_uri.host()).scheme(USE_SSL ? "wss" : "ws");
+		WEBSOCKET_URI.path("/websocket/");
+		
+		$("#create_input_step1").hide();
 		set_status("hashing file...");
 		var fr = new FileReader();
 		fr.onload = function(evt) {
@@ -37,16 +52,12 @@ $(function() {
 			spark.append(fr.result);
 			md5hash = spark.end();
 			set_status("");
-			$("#filename-h2").text(document.getElementById("file-input").files[0].name);
-			$("#step2").show();
+			$(".filename-h2").text(document.getElementById("file-input").files[0].name);
+			create_instance();
 		}
 		fr.readAsArrayBuffer(document.getElementById("file-input").files[0]);
 	});
-	
-	$("#create-instance-button").click(function(evt) {
-        if (evt.shiftKey) {
-            WEBSOCKET_URL = "ws://localhost:5000/websocket/";
-        }
+	function create_instance() {
 		var file = document.getElementById("file-input").files[0];
 		var filename = document.getElementById("file-input").files[0].name;
 		set_status("reading file...");
@@ -58,7 +69,7 @@ $(function() {
 				Lua.exec("load_mission()");
 				var data = JSON.parse(ipc.data);
 				set_status("opening websocket...");
-				var ws = new WebSocket(WEBSOCKET_URL);
+				var ws = new WebSocket(WEBSOCKET_URI.toString());
 				ws.onopen = function() {
 					set_status("uploading data...");
 					var request = { request_id: 1,
@@ -71,16 +82,15 @@ $(function() {
 					ws.send(JSON.stringify(request));
 				}
 				ws.onmessage = function(msg) {
+					ws.close();
+					
 					set_status("processing response...");
 					var data = JSON.parse(msg.data);
-					$("#instance_id-input").val(data.instance_id);
-					$("#admin_pw-input").val(data.admin_pw);
-					$("#instance-id-td").text(data.instance_id);
-					$("#blue-pw-td").text(data.blue_pw);
-					$("#red-pw-td").text(data.red_pw);
-					$("#admin-pw-td").text(data.admin_pw);
-					$("#instance_info").css("visibility", "visible");
-					console.log(data);
+					var u = new URI().scheme(USE_SSL ? "https" : "http").host(new URI($("#server-input").val()).host()).path("/").query({"instance_id": data.instance_id});
+					u.username("admin").password(data.admin_pw);
+					$("#admin-url-input").val(u.toString());
+					$("#connect_existing_form").submit();
+					
 					set_status("instance created.");
 				}
 			},
@@ -88,13 +98,69 @@ $(function() {
 			true,
 			"utf-8");
 		});
+	}
+	
+	
+	$("#existing_instance_choice").click(function() {
+		$("#task_choice").hide();
+		$("#connect_existing_step1").show();
+		$("#admin-url-input").focus();
+	});
+	$("#connect_existing_form").submit(function(e) {
+		e.preventDefault();
+		$("#save-file-input-td").append($("#file-input").remove());
+		
+		$("#connect_existing_step1").hide();
+		ADMIN_URI = new URI($("#admin-url-input").val());
+		USE_SSL = !!(ADMIN_URI.scheme() == "https");
+		WEBSOCKET_URI = new URI();
+		WEBSOCKET_URI.scheme(USE_SSL ? "wss" : "ws").host(ADMIN_URI.host()).path("/websocket/");
+		
+		set_status("opening websocket...");
+		var ws = new WebSocket(WEBSOCKET_URI.toString());
+		ws.onopen = function() {
+			set_status("requesting instance info...");
+			var request = { request_id: 1,
+							request: "instance_info",
+							instance_id: ADMIN_URI.query(true).instance_id,
+							admin_pw: ADMIN_URI.password()
+						};
+			ws.send(JSON.stringify(request));
+		};
+		ws.onmessage = function(msg) {
+			var data = JSON.parse(msg.data);
+			if (!data.success) {
+				alert("Error: "+data.error_msg);
+				return;
+			}
+			
+			var u = new URI().scheme(USE_SSL ? "https" : "http").host(ADMIN_URI.host()).path("/").query({"instance_id": data.instance_id});
+			
+			u.username("admin").password(data.admin_pw);
+			$("#admin-url").text(u.toString());
+			$("#admin-url").attr("href", u.toString());
+			
+			u.username("red").password(data.red_pw);
+			$("#red-url").text(u.toString());
+			$("#red-url").attr("href", u.toString());
+			
+			u.username("blue").password(data.blue_pw);
+			$("#blue-url").text(u.toString());
+			$("#blue-url").attr("href", u.toString());
+			
+			$("#instance-id-td").text(data.instance_id);
+			
+			$("#connect_existing_step2").show();
+			set_status("");
+		}
 	});
 	
+	$("#red-url, #blue-url, #admin-url").click(function(e) {
+		alert("Right-click the link and copy the URL to your clipboard!");
+		return false;
+	});
 	
 	$("#save-mission-button").click(function(evt) {
-        if (evt.shiftKey) {
-            WEBSOCKET_URL = "ws://localhost:5000/websocket/";
-        }
 		var file = document.getElementById("file-input").files[0];
 		var filename = document.getElementById("file-input").files[0].name;
 		set_status("extracting mission...");
@@ -107,13 +173,13 @@ $(function() {
 					zipfs.remove(zipfs.find("mission"));
 					
 					set_status("opening websocket...");
-					var ws = new WebSocket(WEBSOCKET_URL);
+					var ws = new WebSocket(WEBSOCKET_URI.toString());
 					ws.onopen = function() {
 						set_status("requesting data from server...");
 						var request = { request_id: 1,
 										request: "save_mission",
-										admin_pw: $("#admin_pw-input").val(),
-										instance_id: $("#instance_id-input").val(),
+										admin_pw: ADMIN_URI.password(),
+										instance_id: ADMIN_URI.query(true).instance_id,
 									};
 						ws.send(JSON.stringify(request));
 					}
@@ -163,9 +229,6 @@ $(function() {
 	});
 	
 	$("#upload_mission_state_button").click(function(evt) {
-        if (evt.shiftKey) {
-            WEBSOCKET_URL = "ws://localhost:5000/websocket/";
-        }
 		var file = document.getElementById("state-input").files[0];
 		var filename = document.getElementById("state-input").files[0].name;
 		set_status("reading state...");
@@ -173,13 +236,13 @@ $(function() {
 		reader.readAsText(file);
 		reader.onload = function(e) {
 			var text = reader.result;
-				var ws = new WebSocket(WEBSOCKET_URL);
+				var ws = new WebSocket(WEBSOCKET_URI.toString());
 				ws.onopen = function() {
 					set_status("uploading state...");
 					var request = { request_id: 1,
 									request: "set_mission_state",
-									admin_pw: $("#admin_pw-input").val(),
-									instance_id: $("#instance_id-input").val(),
+									admin_pw: ADMIN_URI.password(),
+									instance_id: ADMIN_URI.query(true).instance_id,
 									missionState: JSON.parse(text),
 									};
 					ws.send(JSON.stringify(request));
