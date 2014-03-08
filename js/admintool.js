@@ -109,6 +109,20 @@ $(function() {
 	$("#connect_existing_form").submit(function(e) {
 		e.preventDefault();
 		$("#save-file-input-td").append($("#file-input").remove());
+		$("#file-input").change(function() {
+			set_status("hashing file...");
+			var fr = new FileReader();
+			fr.onload = function(evt) {
+				var spark = new SparkMD5.ArrayBuffer();
+				spark.append(fr.result);
+				md5hash = spark.end();
+				set_status("");
+				$(".filename-h2").text(document.getElementById("file-input").files[0].name);
+				$("#save-mission-button").attr("disabled", true);
+			}
+			$("#save-mission-button").removeAttr("disabled");
+			fr.readAsArrayBuffer(document.getElementById("file-input").files[0]);
+		});
 		
 		$("#connect_existing_step1").hide();
 		ADMIN_URI = new URI($("#admin-url-input").val());
