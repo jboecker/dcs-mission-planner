@@ -205,7 +205,7 @@ $(function() {
 							return;
 						}
 						if (data.md5hash != md5hash) {
-							alert('Instance "'+$("#instance_id-input").val()+'" was created from another mission file, which was named "'+data.filename+'".\nSaving the waypoint data using a different mission as a template may or may not work.');
+							alert('Instance "'+ADMIN_URI.query(true).instance_id+'" was created from another mission file, which was named "'+data.filename+'".\nSaving the waypoint data using a different mission as a template may or may not work.');
 						}
 						set_status("processing response [updaing mission data]...");
 						ipc.data = JSON.stringify(data.data);
@@ -273,5 +273,38 @@ $(function() {
 				}
 		}
 	});
+	
+	$("#upload_livery_list_button").click(function(evt) {
+		var file = document.getElementById("livery-list-input").files[0];
+		var filename = document.getElementById("livery-list-input").files[0].name;
+		set_status("reading livery list...");
+		var reader = new FileReader();
+		reader.readAsText(file);
+		reader.onload = function(e) {
+			var text = reader.result;
+				var ws = new WebSocket(WEBSOCKET_URI.toString());
+				ws.onopen = function() {
+					set_status("uploading livery list...");
+					var request = { request_id: 1,
+									request: "set_liveries",
+									admin_pw: ADMIN_URI.password(),
+									instance_id: ADMIN_URI.query(true).instance_id,
+									liveries: JSON.parse(text),
+									};
+					ws.send(JSON.stringify(request));
+				}
+				ws.onmessage = function(e) {
+					var msg = JSON.parse(e.data);
+					set_status("processing response...");
+					if (!msg.success) {
+						set_status("error");
+						alert("Error: "+msg.error_msg);
+					} else {
+						set_status("uploaded livery list.");
+					}
+				}
+		}
+	});
+	
 	
 });

@@ -96,6 +96,9 @@
 					<tr><th>Mission File: </th><td id="save-file-input-td"><!-- input element will be moved here by JavaScript --></td></tr>
 					<tr><th></th><td><button id="save-mission-button">Save Mission</button></td></tr>
 					<tr><th></th><td>&nbsp;</td></tr>
+					<tr><th>Livery List:</th><td><input type="file" accept="text/plain" id="livery-list-input"></td></tr>
+					<tr><th></th><td><button id="upload_livery_list_button">Upload Livery List</button></td></tr>
+					<tr><th></th><td>&nbsp;</td></tr>
 					<tr><th>Mission State:</th><td><input type="file" accept="text/plain" id="state-input"></td></tr>
 					<tr><th></th><td><button id="upload_mission_state_button">Upload Mission State</button></td></tr>
 				</table>
@@ -290,11 +293,11 @@ function save_impl()
 
 	data = JSON:decode(ipc_get("data"))
 
-	local routes = {}
+	local route_ids = {}
 	local second_waypoints_by_group_name = {}
 	for _, obj in pairs(data.objects) do
 	   if obj.type == "CLIENT_ACFT_ROUTE" then
-		  routes[obj.group_name] = obj.id
+		  route_ids[obj.group_name] = obj.id
 		  local first_wpt = data.objects[obj.first_waypoint_id]
 		  if first_wpt.next_waypoint_id ~= "" then
 			 second_waypoints_by_group_name[obj.group_name] = data.objects[first_wpt.next_waypoint_id]
@@ -303,7 +306,7 @@ function save_impl()
 	end
 
 
-	function update_waypoints(group, route, data)
+	function update_waypoints(group, data)
 		  -- delete existing waypoints
 		  local points = group.route.points
 		  for i = #points,2,-1 do
@@ -374,9 +377,9 @@ function save_impl()
 				   for group_id=1,#mission.coalition[coalition_name].country[country_id][category].group do
 					  local group = mission.coalition[coalition_name].country[country_id][category].group[group_id]
 					  
-					  if routes[group.name] then
-						update_waypoints(group, routes[group.name], data)
-						if routes[group.name].livery_id then group.units[1].livery_id = routes[group.name].livery_id end
+					  if route_ids[group.name] then
+						update_waypoints(group, data)
+						if data.objects[route_ids[group.name]].livery_id then group.units[1].livery_id = data.objects[route_ids[group.name]].livery_id end
 					  end
 					  
 					  local new_units = {}

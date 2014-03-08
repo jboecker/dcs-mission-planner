@@ -9,6 +9,7 @@ mp.Model = function(id_prefix, initial_data) {
 	function init() {
 		that.local_id_prefix = id_prefix;
 		that.objects = {};
+		that.liveries = initial_data.liveries || null;
 		that.data_version = 0;
 		that.selected_feature_group_id = "";
 		

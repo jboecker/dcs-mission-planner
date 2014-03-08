@@ -75,7 +75,7 @@ $(function() {
 					$("#activeroute").append($("<option>").attr("value", id_name_array[0]).text(id_name_array[1]));
 					$("#copyroute_from").append($("<option>").attr("value", id_name_array[0]).text(id_name_array[1]));
 				}
-					
+				
 				if (!routes_found) {
 					return abort_connect("Error: The "+coalition+" side has no routes to edit.");
 				}
@@ -157,7 +157,41 @@ $(function() {
 		if (mp.model) mp.model.setSelectedFeatureGroupId($("#activeroute").val());
 	});
 	$(document).on("update_selected_feature_group_id", function(e, old_id, new_id) {
+		var obj = mp.model.objects[new_id];
 		$("#activeroute").val(new_id);
+		$("#livery").empty();
+		var has_selected = false;
+		if (mp.model.liveries && mp.model.liveries[obj.unittype]) {
+			var livery_list = mp.model.liveries[obj.unittype];
+			$.each(livery_list, function(_, liv) {
+				console.log(liv);
+				var option = $("<option>").text(liv).attr("value", liv);
+				if (liv.toLowerCase() == obj.livery_id.toLowerCase()) {
+					option.attr("selected", true);
+					has_selected = true;
+				}
+				$("#livery").append(option);
+			});
+		}
+		if (!has_selected) {
+			$("#livery").append($("<option>").text(obj.livery_id).attr("value", obj.livery_id).attr("selected", true));
+		}
+	});
+	$("#livery").change(function(e) {
+		var obj = mp.model.objects[$("#activeroute").val()];
+		var new_livery = $("#livery").val();
+		$("#livery").val(obj.livery_id);
+		
+		var obj_copy = JSON.parse(JSON.stringify(obj));
+		obj_copy.livery_id = new_livery;
+		mp.api.start_transaction({
+			objects: [obj_copy]
+		});
+	});
+	$(document).on("update_object", function(e, obj) {
+		if (obj.type == "CLIENT_ACFT_ROUTE" && $("#activeroute").val() == obj.id) {
+			$("#livery").val(obj.livery_id);
+		}
 	});
 	
 	$("#center_on_wp0_button").click(function() {
