@@ -145,6 +145,8 @@ mp.MapView = function(map_type) {
 						strokeWidth: 2,
 						strokeOpacity: .5,
 						fillOpacity: .1,
+						label: "${label}",
+						labelAlign: "center",
 					}, OpenLayers.Feature.Vector.style["select"])),
 				}),
 			}));
@@ -422,6 +424,7 @@ mp.MapView = function(map_type) {
 		feature.renderIntent = "annotation";
 		feature.data.type = "annotation";
 		feature.data.object_id = obj.id;
+		feature.attributes.label = obj.label;
 		vectorLayers[LAYER_ID_ANNOTATIONS].addFeatures([feature]);
 		vectorLayers[LAYER_ID_ANNOTATIONS].redraw();
 	}
@@ -603,6 +606,7 @@ mp.MapView.InputHandler = OpenLayers.Class({
 					id: mp.model.newId(),
 					type: "LINEARRING_ANNOTATION",
 					points: [],
+					label: prompt("Annotation Label:"),
 				}
 				for (i=0; i<linearRing.components.length; i++) {
 					var p = linearRing.components[i];
