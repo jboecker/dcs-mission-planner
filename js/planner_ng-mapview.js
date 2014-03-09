@@ -210,7 +210,7 @@ mp.MapView = function(map_type) {
 			vectorLayers: vectorLayers,
 			mapView: this,
 		});
-		
+		this.inputHandler.doStateTransition(mp.model.ui_state);
 	}
 	
 	this.getInputHandler = function() {
