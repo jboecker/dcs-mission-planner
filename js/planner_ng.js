@@ -140,6 +140,7 @@ $(function() {
 	}
 	$("#baselayer").change(function() {
 		var baselayer_name = $("#baselayer").val();
+        var old_state = mp.mapview.state;
 		
 		var center = mp.mapview.getMap().getCenter().transform(map.getProjection(), "EPSG:4326");
 		var old_zoom = mp.mapview.getMap().zoom;
@@ -201,19 +202,29 @@ $(function() {
 		mp.mapview.getMap().setCenter(new OpenLayers.LonLat(lon=wpt.lon, lat=wpt.lat).transform("EPSG:4326", mp.mapview.getMap().getProjection()));
 	});
 	
-	$("input[name=editmode]:radio").change(function() {
+	function on_editmode_changed() {
 		$("div.editmode").removeClass("active_editmode");
 		if ($("#editmode_routes").is(":checked")) {
 			$("#editmode_routes_controls").addClass("active_editmode");
+            // route edit mode is the default, so this will be called during initialization
+            // when the mapview does not exist yet; hence the if (mp.mapview) is required here.
 			if (mp.mapview) mp.mapview.getInputHandler().doStateTransition("idle");
 		}
 		if ($("#editmode_annotations").is(":checked")) {
 			$("#editmode_annotations_controls").addClass("active_editmode");
-			if (mp.mapview) mp.mapview.getInputHandler().doStateTransition("draw_circle");
-		}
-	});
-	$("input[name=editmode]:radio").change();
+            $("#annotationtype").removeAttr("disabled");
+            $("#annotationtype").change();
+		} else {
+            $("#annotationtype").attr("disabled", true);
+        }
+	};
+	$("input[name=editmode]:radio").change(on_editmode_changed);
+    on_editmode_changed();
 	
+    $("#annotationtype").change(function() {
+		mp.mapview.getInputHandler().doStateTransition($("#annotationtype").val());
+    });
+
 	$("div.editmode").click(function() {
 		$("input[name=editmode]:radio", this).prop("checked", true);
 		$("input[name=editmode]:radio", this).change();

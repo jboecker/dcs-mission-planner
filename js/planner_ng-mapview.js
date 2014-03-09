@@ -583,30 +583,7 @@ mp.MapView.InputHandler = OpenLayers.Class({
 				return false;
 			},
 		},
-		"draw_circle": {
-			enter: function(args) {
-				this.drawState = {
-				};
-			},
-			leave: function(args) {
-				if (args.new_state == "draw_circle_mousedown") return;
-				this.drawState = undefined;
-			},
-			rightdown: function(args) {
-				console.log("c");
-				this.drawState.origin_900913 = new OpenLayers.Geometry.Point(args.mapCoords.lon, args.mapCoords.lat).transform(this.map.getProjection(), 'EPSG:900913');
-				this.drawState.feature = new OpenLayers.Feature.Vector();
-				this.vectorLayers[LAYER_ID_ANNOTATIONS].addFeatures([this.drawState.feature]);
-
-				this.drawState.radius = this.drawState.origin_900913.distanceTo(new OpenLayers.Geometry.Point(args.mapCoords.lon, args.mapCoords.lat).transform(this.map.getProjection(), 'EPSG:900913'));
-				this.drawState.feature.geometry = OpenLayers.Geometry.Polygon.createRegularPolygon(
-					this.drawState.origin_900913, this.drawState.radius, 24, 0
-				).transform("EPSG:900913", this.map.getProjection());
-				this.drawState.feature.layer.drawFeature(this.drawState.feature);
-				this.vectorLayers[LAYER_ID_ANNOTATIONS].redraw();
-				
-				this.doStateTransition("draw_circle_mousedown");
-			},
+        "linearring_annotation_base": {
 			leftup: function(args) {
 				var feature = this.vectorLayers[LAYER_ID_ANNOTATIONS].getFeatureFromEvent(args.event);
 				if (feature) {
@@ -615,20 +592,13 @@ mp.MapView.InputHandler = OpenLayers.Class({
 					this.defaultLeftUpAction(args);
 				}
 			},
-		},
-		"draw_circle_mousedown": {
-			move: function(args) {
-					this.drawState.radius = this.drawState.origin_900913.distanceTo(new OpenLayers.Geometry.Point(args.mapCoords.lon, args.mapCoords.lat).transform(this.map.getProjection(), 'EPSG:900913'));
-					this.drawState.feature.geometry = OpenLayers.Geometry.Polygon.createRegularPolygon(
-						this.drawState.origin_900913, this.drawState.radius, 24, 0
-					).transform("EPSG:900913", this.map.getProjection());
-					this.drawState.feature.layer.drawFeature(this.drawState.feature);
-					this.vectorLayers[LAYER_ID_ANNOTATIONS].redraw();
-			},
-			rightup: function(args) {
+        },
+        "linearring_annotation_drawing_base": {
+            leave: function(args) {
+                // save polygon as LINEARRING_ANNOTATION here
 				var i;
 				var feature = this.drawState.feature;
-				var linearRing = feature.geometry.components[0];
+				var linearRing = feature.geometry;
 				var new_obj = {
 					id: mp.model.newId(),
 					type: "LINEARRING_ANNOTATION",
@@ -639,6 +609,7 @@ mp.MapView.InputHandler = OpenLayers.Class({
 					var lonlat = new OpenLayers.LonLat(p.x, p.y).transform(this.map.getProjection(), 'EPSG:4326');
 					new_obj.points.push({lon: lonlat.lon, lat: lonlat.lat});
 				}
+                this.drawState = undefined;
 				
 				mp.api.start_transaction({
 					objects: [new_obj],
@@ -649,10 +620,80 @@ mp.MapView.InputHandler = OpenLayers.Class({
 						this.vectorLayers[LAYER_ID_ANNOTATIONS].removeFeatures([feature]);
 					}, this),
 				});
+            },
+        },
+		"draw_circle": {
+            inherit_from: "linearring_annotation_base",
+			enter: function(args) {
+				this.drawState = {
+				};
+			},
+			rightdown: function(args) {
+				console.log("c");
+				this.drawState.origin_900913 = new OpenLayers.Geometry.Point(args.mapCoords.lon, args.mapCoords.lat).transform(this.map.getProjection(), 'EPSG:900913');
+				this.drawState.feature = new OpenLayers.Feature.Vector();
+				this.vectorLayers[LAYER_ID_ANNOTATIONS].addFeatures([this.drawState.feature]);
 
+				this.drawState.radius = this.drawState.origin_900913.distanceTo(new OpenLayers.Geometry.Point(args.mapCoords.lon, args.mapCoords.lat).transform(this.map.getProjection(), 'EPSG:900913'));
+                // a polygon consists of several LinearRings (outline + holes), we only
+                // want the outline
+				var poly = OpenLayers.Geometry.Polygon.createRegularPolygon(
+					this.drawState.origin_900913, this.drawState.radius, 24, 0
+				).transform("EPSG:900913", this.map.getProjection());
+                this.drawState.feature.geometry = poly.components[0];
+				this.drawState.feature.layer.drawFeature(this.drawState.feature);
+				this.vectorLayers[LAYER_ID_ANNOTATIONS].redraw();
+				
+				this.doStateTransition("draw_circle_mousedown");
+			},
+		},
+		"draw_circle_mousedown": {
+            inherit_from: "linearring_annotation_drawing_base",
+			move: function(args) {
+				this.drawState.radius = this.drawState.origin_900913.distanceTo(new OpenLayers.Geometry.Point(args.mapCoords.lon, args.mapCoords.lat).transform(this.map.getProjection(), 'EPSG:900913'));
+                // a polygon consists of several LinearRings (outline + holes), we only
+                // want the outline
+				var poly = OpenLayers.Geometry.Polygon.createRegularPolygon(
+					this.drawState.origin_900913, this.drawState.radius, 24, 0
+				).transform("EPSG:900913", this.map.getProjection());
+                this.drawState.feature.geometry = poly.components[0];
+				this.drawState.feature.layer.drawFeature(this.drawState.feature);
+				this.vectorLayers[LAYER_ID_ANNOTATIONS].redraw();
+			},
+			rightup: function(args) {
 				this.doStateTransition("draw_circle");
 			},
 		},
+        "draw_polygon": {
+            inherit_from: "linearring_annotation_base",
+            rightup: function(args) {
+                this.drawState = {};
+				this.drawState.feature = new OpenLayers.Feature.Vector();
+                var p = new OpenLayers.Geometry.Point(args.mapCoords.lon, args.mapCoords.lat);
+                this.drawState.feature.geometry = new OpenLayers.Geometry.LinearRing([p]);
+				this.vectorLayers[LAYER_ID_ANNOTATIONS].addFeatures([this.drawState.feature]);
+                this.drawState.feature.layer.drawFeature(this.drawState.feature);
+                this.doStateTransition("draw_polygon_segment");
+            },
+        },
+        "draw_polygon_segment": {
+            inherit_from: "linearring_annotation_drawing_base",
+            leftup: function(args) {
+                this.doStateTransition("draw_polygon");
+            },
+            move: function(args) {
+                // update coordinates of last point in linear ring
+                var p = new OpenLayers.Geometry.Point(args.mapCoords.lon, args.mapCoords.lat);
+                var last_idx = this.drawState.feature.geometry.components.length - 1;
+                this.drawState.feature.geometry.components[last_idx] = p;
+                this.drawState.feature.layer.drawFeature(this.drawState.feature);                
+            },
+            rightup: function(args) {
+                // add new point at mouse cursor location
+                this.drawState.feature.geometry.components.push(new OpenLayers.Geometry.Point(args.mapCoords.lon, args.mapCoords.lat));
+                this.drawState.feature.layer.drawFeature(this.drawState.feature);
+            },
+        },
 	},
 	
 	initialize: function(options) {
@@ -737,6 +778,15 @@ mp.MapView.InputHandler = OpenLayers.Class({
 	doStateMachineInput: function(transition_name, args) {
 		
 		var state = this.stateMachine[mp.model.ui_state];
+        // handle state inheritance
+        
+        while (!state[transition_name]) {
+            if (state.inherit_from)
+                state = this.stateMachine[state.inherit_from];
+            else
+                break;
+        };
+        
 		if (state[transition_name]) {
 			if (this.logStateInput) console.log("STATE MACHINE INPUT", mp.model.ui_state, transition_name, args);
 			return $.proxy(state[transition_name], this)(args);
@@ -751,10 +801,13 @@ mp.MapView.InputHandler = OpenLayers.Class({
 		var old_state = mp.model.ui_state;
 		OpenLayers.Util.extend(args, {'old_state': old_state, 'new_state': new_state});
 		
-		this.doStateMachineInput("leave", args);
-		mp.model.ui_state = new_state;
-		
-		this.doStateMachineInput("enter", args);
+        if (old_state == new_state) {
+            this.doStateMachineInput("reenter", args);
+        } else {
+		    this.doStateMachineInput("leave", args);
+		    mp.model.ui_state = new_state;
+		    this.doStateMachineInput("enter", args);
+        }
 	},
 	
 	getHoveredFeatureFromEvent: function(e) {
