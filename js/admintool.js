@@ -109,6 +109,7 @@ $(function() {
 	$("#connect_existing_form").submit(function(e) {
 		e.preventDefault();
 		$("#save-file-input-td").append($("#file-input").remove());
+		$("#file-input").off("click");
 		$("#file-input").change(function() {
 			set_status("hashing file...");
 			var fr = new FileReader();
@@ -118,11 +119,12 @@ $(function() {
 				md5hash = spark.end();
 				set_status("");
 				$(".filename-h2").text(document.getElementById("file-input").files[0].name);
-				$("#save-mission-button").attr("disabled", true);
+				$("#save-mission-button").removeAttr("disabled");
 			}
-			$("#save-mission-button").removeAttr("disabled");
+			$("#save-mission-button").attr("disabled", true);
 			fr.readAsArrayBuffer(document.getElementById("file-input").files[0]);
 		});
+		if (!document.getElementById("file-input").files.length) $("#save-mission-button").attr("disabled", true);
 		
 		$("#connect_existing_step1").hide();
 		ADMIN_URI = new URI($("#admin-url-input").val());
