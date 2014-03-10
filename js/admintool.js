@@ -288,11 +288,17 @@ $(function() {
 			ws.onopen = function() {
 				set_status("uploading livery list...");
 				
+				var input_liveries = JSON.parse(text);
+				var liveries = {};
+				$.each(input_liveries, function(key, value) {
+					liveries[key.toUpperCase()] = value;
+				});
+				
 				var request = { request_id: 1,
 								request: "set_liveries",
 								admin_pw: ADMIN_URI.password(),
 								instance_id: ADMIN_URI.query(true).instance_id,
-								liveries: JSON.parse(text),
+								liveries: liveries,
 							  };
 				ws.send(JSON.stringify(request));
 			}

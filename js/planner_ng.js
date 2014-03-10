@@ -162,8 +162,8 @@ $(function() {
 		$("#activeroute").val(new_id);
 		$("#livery").empty();
 		var has_selected = false;
-		if (mp.model.liveries && mp.model.liveries[obj.unittype]) {
-			var livery_list = mp.model.liveries[obj.unittype];
+		if (mp.model.liveries && mp.model.liveries[obj.unittype.toUpperCase()]) {
+			var livery_list = mp.model.liveries[obj.unittype.toUpperCase()];
 			$.each(livery_list, function(_, liv) {
 				console.log(liv);
 				var option = $("<option>").text(liv).attr("value", liv);
