@@ -284,27 +284,28 @@ $(function() {
 		reader.readAsText(file);
 		reader.onload = function(e) {
 			var text = reader.result;
-				var ws = new WebSocket(WEBSOCKET_URI.toString());
-				ws.onopen = function() {
-					set_status("uploading livery list...");
-					var request = { request_id: 1,
-									request: "set_liveries",
-									admin_pw: ADMIN_URI.password(),
-									instance_id: ADMIN_URI.query(true).instance_id,
-									liveries: JSON.parse(text),
-									};
-					ws.send(JSON.stringify(request));
-				}
-				ws.onmessage = function(e) {
-					var msg = JSON.parse(e.data);
-					set_status("processing response...");
-					if (!msg.success) {
-						set_status("error");
-						alert("Error: "+msg.error_msg);
-					} else {
+			var ws = new WebSocket(WEBSOCKET_URI.toString());
+			ws.onopen = function() {
+				set_status("uploading livery list...");
+				
+				var request = { request_id: 1,
+								request: "set_liveries",
+								admin_pw: ADMIN_URI.password(),
+								instance_id: ADMIN_URI.query(true).instance_id,
+								liveries: JSON.parse(text),
+							  };
+				ws.send(JSON.stringify(request));
+			}
+			ws.onmessage = function(e) {
+				var msg = JSON.parse(e.data);
+				set_status("processing response...");
+				if (!msg.success) {
+					set_status("error");
+					alert("Error: "+msg.error_msg);
+				} else {
 						set_status("uploaded livery list.");
-					}
 				}
+			}
 		}
 	});
 	
