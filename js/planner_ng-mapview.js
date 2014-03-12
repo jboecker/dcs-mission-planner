@@ -8,7 +8,7 @@ LAYER_ID_INACTIVE_ROUTES = 4;
 LAYER_ID_ACTIVE_ROUTE_SEGMENTS = 5;
 LAYER_ID_ACTIVE_WAYPOINTS = 6;
 
-LAYER_ID_MAX = 5;
+LAYER_ID_MAX = 6;
 
 function formatLonLats(lonLat) {
 //	lonLat.transform(map.getProjection(), "EPSG:4326");
@@ -401,7 +401,7 @@ mp.MapView = function(map_type) {
 	}
 	
 	function redrawPresetZoneAnnotation(obj) {
-		var center = new OpenLayers.Geometry.Point(obj.lon, obj.lat).transform(this.map.getProjection(), 'EPSG:900913');
+		var center = new OpenLayers.Geometry.Point(obj.lon, obj.lat).transform('EPSG:4326', 'EPSG:900913');
 		var feature = new OpenLayers.Feature.Vector();
 		var radius = obj.radius;
 		var poly = OpenLayers.Geometry.Polygon.createRegularPolygon(
