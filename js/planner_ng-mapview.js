@@ -607,6 +607,7 @@ mp.MapView.InputHandler = OpenLayers.Class({
 					type: "LINEARRING_ANNOTATION",
 					points: [],
 					label: prompt("Annotation Label:"),
+					visibility: mp.model.coalition,
 				}
 				for (i=0; i<linearRing.components.length; i++) {
 					var p = linearRing.components[i];

@@ -51,7 +51,7 @@ $(function() {
 				}
 				$("#connect_status").text("drawing map...");
 				$("#map").show();
-				mp.model = new mp.Model(result.id_prefix, result.data);
+				mp.model = new mp.Model(coalition, result.id_prefix, result.data);
 				
 				var routes_found = false;
 				var routes = [];

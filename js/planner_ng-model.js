@@ -1,6 +1,6 @@
 mp = mp || {};
 
-mp.Model = function(id_prefix, initial_data) {
+mp.Model = function(coalition, id_prefix, initial_data) {
 	var that = this;
 	
 	this.timeout = 500;
@@ -12,7 +12,8 @@ mp.Model = function(id_prefix, initial_data) {
 		that.liveries = initial_data.liveries || null;
 		that.data_version = 0;
 		that.selected_feature_group_id = "";
-		
+		that.coalition = coalition;
+        
 		var last_local_id = 0;
 		that.newId = function() {
 			last_local_id++;
