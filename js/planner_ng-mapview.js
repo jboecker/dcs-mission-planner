@@ -1,11 +1,12 @@
 mp = mp || {};
 
 LAYER_ID_AIRPORTS = 0;
-LAYER_ID_UNITS = 1;
-LAYER_ID_ANNOTATIONS = 2;
-LAYER_ID_INACTIVE_ROUTES = 3;
-LAYER_ID_ACTIVE_ROUTE_SEGMENTS = 4;
-LAYER_ID_ACTIVE_WAYPOINTS = 5;
+LAYER_ID_PRESET_ANNOTATIONS = 1;
+LAYER_ID_UNITS = 2;
+LAYER_ID_ANNOTATIONS = 3;
+LAYER_ID_INACTIVE_ROUTES = 4;
+LAYER_ID_ACTIVE_ROUTE_SEGMENTS = 5;
+LAYER_ID_ACTIVE_WAYPOINTS = 6;
 
 LAYER_ID_MAX = 5;
 
@@ -80,7 +81,23 @@ mp.MapView = function(map_type) {
 			styleMap: new OpenLayers.StyleMap({
 			}),
 		}));
-
+		
+		vectorLayers.push(new OpenLayers.Layer.Vector("Preset Annotations", {
+			renderers: ["Canvas"],
+			projection: "EPSG:4326",
+			styleMap: new OpenLayers.StyleMap({
+					"annotation": new OpenLayers.Style(OpenLayers.Util.applyDefaults({
+						strokeColor: "grey",
+						fillColor: "grey",
+						strokeWidth: 2,
+						strokeOpacity: .5,
+						fillOpacity: .1,
+						label: "${label}",
+						labelAlign: "center",
+					}, OpenLayers.Feature.Vector.style["select"])),
+			})
+		}));
+		
 		vectorLayers.push(new OpenLayers.Layer.Vector("Unit Display", {
 			renderers: ["Canvas"],
 			projection: "EPSG:4326",
@@ -380,6 +397,25 @@ mp.MapView = function(map_type) {
 		if (obj.type === "LINEARRING_ANNOTATION") redrawLinearRingAnnotation(obj);
 		if (obj.type === "UNIT") redrawUnit(obj);
 		if (obj.type === "BULLSEYE") redrawBullseye(obj);
+		if (obj.type == "PRESET_ZONE_ANNOTATION") redrawPresetZoneAnnotation(obj);
+	}
+	
+	function redrawPresetZoneAnnotation(obj) {
+		var center = new OpenLayers.Geometry.Point(obj.lon, obj.lat).transform(this.map.getProjection(), 'EPSG:900913');
+		var feature = new OpenLayers.Feature.Vector();
+		var radius = obj.radius;
+		var poly = OpenLayers.Geometry.Polygon.createRegularPolygon(
+			center, radius, 24, 0
+		).transform("EPSG:900913", this.map.getProjection());
+		feature.geometry = poly.components[0];
+
+		features_by_object_id[obj.id] = [feature];
+		feature.renderIntent = "annotation";
+		feature.data.type = "annotation";
+		feature.data.object_id = obj.id;
+		feature.attributes.label = obj.label;
+		vectorLayers[LAYER_ID_PRESET_ANNOTATIONS].addFeatures([feature]);
+		vectorLayers[LAYER_ID_PRESET_ANNOTATIONS].redraw();
 	}
 	
 	function redrawBullseye(obj) {

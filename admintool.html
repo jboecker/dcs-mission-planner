@@ -246,7 +246,47 @@ function load_mission()
 	   }
 	   data.objects[ann.id] = ann
 	end
-
+	
+	-- add pre-set circle annotations
+	if (mission.triggers and mission.triggers.zones) then
+		for _, zone in pairs(mission.triggers.zones) do
+			if zone.x and zone.y and zone.radius and zone.name then
+				local show_zone = false
+				local zone_vis = nil
+				local zone_text = nil
+				if zone.name:match("MPMAP_RED") then
+					show_zone = true
+					zone_vis = "red"
+					zone_text = zone.name:sub(11)
+				end
+				if zone.name:match("MPMAP_BLUE") then
+					show_zone = true
+					zone_vis = "blue"
+					zone_text = zone.name:sub(12)
+				end
+				if zone.name:match("MPMAP_BOTH") then
+					show_zone = true
+					zone_vis = nil
+					zone_text = zone.name:sub(12)
+				end
+				
+				if show_zone then
+					local ann = {
+						id = new_id(),
+						type = "PRESET_ZONE_ANNOTATION",
+						visibility = zone_vis,
+						label = zone_text,
+						radius = zone.radius,
+						x = zone.x,
+						z = zone.y
+					}
+					data.objects[ann.id] = ann
+				end
+			end
+		end
+	end
+	
+	-- add bullseye markers
 	for _, coa in pairs({"blue", "red"}) do
 	   local bullseye = {
 		  id = new_id(),
