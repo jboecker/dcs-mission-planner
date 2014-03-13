@@ -163,6 +163,14 @@ $(function() {
 			u.username("blue").password(data.blue_pw);
 			$("#blue-url").text(u.toString());
 			$("#blue-url").attr("href", u.toString());
+
+			u.username("red").password(data.red_spectator_pw);
+			$("#red-spectator-url").text(u.toString());
+			$("#red-spectator-url").attr("href", u.toString());
+			
+			u.username("blue").password(data.blue_spectator_pw);
+			$("#blue-spectator-url").text(u.toString());
+			$("#blue-spectator-url").attr("href", u.toString());
 			
 			$("#instance-id-td").text(data.instance_id);
 			
