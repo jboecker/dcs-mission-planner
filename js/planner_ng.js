@@ -9,7 +9,13 @@ $(function() {
 	$("#connect_url_input").focus();
     
 	if (mp.MAPPACK_VERSION && mp.MAPPACK_VERSION == 1) {
+		mp.settings.dcs_map_url = 'dcs-map/DCS-EPSG4326/';
 		mp.settings.default_map = 'dcs';
+	} else if (mp.ONLINE_MAPPACK_VERSION && mp.ONLINE_MAPPACK_VERSION == 1) {
+		mp.settings.dcs_map_url = mp.ONLINE_MAPPACK_URL+"DCS-EPSG4326/";
+		mp.settings.default_map = 'dcs';
+		$("#dcs_map_info").show();
+		$("#dcs_online_map_info").show();
 	} else {
 		$("#dcs_world_map_option").remove();
 		mp.settings.default_map = 'osm';

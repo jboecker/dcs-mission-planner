@@ -46,15 +46,17 @@ div#connect_controls {
     max-width: 400px;
 }
 
-div#dcs_map_info {
+div#dcs_map_info, div#dcs_online_map_info {
     padding: 3px;
     border-radius: 3px;
     background-color: #fff;
-    border: 3px solid yellow;
+    border: 3px solid;
     margin: auto;
     max-width: 400px;
     margin-top: 10px;
 }
+div#dcs_map_info { border-color: yellow; }
+div#dcs_online_map_info { border-color: orange; }
 
 div#noscript {
     padding: 3px;
