@@ -64,6 +64,16 @@
 				<table>
 					<h3>Select the Misson File to Continue</h3>
 					<tr><th>Server: </th><td><input type="text" id="server-input"/></td></tr>
+                    <tr>
+                      <th>Show Ground Units: </th>
+                      <td>
+                        <select id="groundunit_visibility">
+                          <option value="none">None</option>
+                          <option value="allies">Allies Only</option>
+                          <option value="all">Show All</option>
+                        </select>
+                      </td>
+                    </tr>
 					<tr><th>Mission File (.miz): </th><td><input type="file" id="file-input"></td></tr>
 				</table>
 			</div>
@@ -110,6 +120,7 @@
 		<div id="status"></div>
 		<span id="load_mission_lua" style="display: none;">
 function load_mission()
+	settings = JSON:decode(ipc_get("settings"))
 	local last_id = 0
 	local function new_id()
 	   last_id = last_id + 1
@@ -165,19 +176,30 @@ function load_mission()
 				end
 				if country.vehicle then
 					for _, group in ipairs(country.vehicle.group) do
-						if group.name:match("MP_AIRDEFENCE") then
-							unit_annotations[#unit_annotations+1] = {
-								["type"] = 'AIRDEFENCE',
-								["x"] = group.route.points[1].x,
-								["z"] = group.route.points[1].y,
-							}
-						end
-						if group.name:match("MP_ARMOR") then
-							unit_annotations[#unit_annotations+1] = {
-								["type"] = 'ARMOR',
-								["x"] = group.route.points[1].x,
-								["z"] = group.route.points[1].y,
-							}
+						local group_vis_override = nil
+						if group.name:match("MPMAP_RED") then group_vis_override = "red" end
+						if group.name:match("MPMAP_BLUE") then group_vis_override = "blue" end
+						if group.name:match("MPMAP_BOTH") then group_vis_override = "all" end
+						if settings.groundunit_visibility ~= "none" or group_vis_override then
+							local unit_vis = nil
+							if group_vis_override then
+								unit_vis = group_vis_override
+								if unit_vis == "all" then unit_vis = nil end
+							elseif settings.groundunit_visibility == "allies" then
+								unit_vis = coalition_name
+							else
+								unit_vis = nil
+							end
+							for _, unit in ipairs(group.units) do
+								unit_annotations[#unit_annotations+1] = {
+									["type"] = "UNIT",
+									["unittype"] = unit.type,
+									["coalition"] = coalition_name,
+									["x"] = unit.x,
+									["z"] = unit.y,
+									["visibility"] = unit_vis,
+								}
+							end
 						end
 					end
 				end
@@ -240,14 +262,8 @@ function load_mission()
 
 	-- add unit annotations
 	for _, ua in pairs(get_unit_annotations()) do
-	   local ann = {
-		  id = new_id(),
-		  type = "UNIT",
-		  unittype = ua.type,
-		  x = ua.x,
-		  z = ua.z
-	   }
-	   data.objects[ann.id] = ann
+		ua.id = new_id()
+		data.objects[ua.id] = ua
 	end
 	
 	-- add pre-set circle annotations
@@ -335,6 +351,7 @@ function save_impl()
 
 
 	data = JSON:decode(ipc_get("data"))
+	settings = JSON:decode(ipc_get("settings"))
 
 	local route_ids = {}
 	local second_waypoints_by_group_name = {}

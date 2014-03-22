@@ -66,6 +66,9 @@ $(function() {
 			zipfs.find("mission").getText(function(luaCode) {
 				set_status("processing mission...");
 				Lua.exec(luaCode);
+				ipc.settings = JSON.stringify({
+					groundunit_visibility: $("#groundunit_visibility").val(),
+				});
 				Lua.exec("load_mission()");
 				var data = JSON.parse(ipc.data);
 				set_status("opening websocket...");

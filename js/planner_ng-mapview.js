@@ -114,6 +114,12 @@ mp.MapView = function(map_type) {
 					graphicHeight: 20,
 					fillOpacity: 1,
 				}, OpenLayers.Feature.Vector.style["default"])),
+				"UNIT": new OpenLayers.Style(OpenLayers.Util.applyDefaults({
+					externalGraphic: 'vendors/eagledynamics/mapicons/${iconbasename}_${coalition}.png',
+					graphicWidth: 32,
+					graphicHeight: 32,
+					fillOpacity: 1,
+				}, OpenLayers.Feature.Vector.style["default"])),
 				'bullseye': new OpenLayers.Style(OpenLayers.Util.applyDefaults({
 					externalGraphic: 'vendors/wikimedia-commons/bullseye_${coalition}.svg',
 					graphicWidth: 30,
@@ -438,8 +444,13 @@ mp.MapView = function(map_type) {
 		feature.geometry = new OpenLayers.Geometry.Point(obj.lon, obj.lat).transform('EPSG:4326', this.map.getProjection());
 		
 		features_by_object_id[obj.id] = [feature];
-		feature.renderIntent = "UNIT_"+obj.unittype;
+		feature.renderIntent = "UNIT";
 		feature.data.object_id = obj.id;
+		feature.attributes.coalition = obj.coalition;
+		feature.attributes.iconbasename="P91000001"; // default to tank
+		if (mp.UNITDATA[obj.unittype]) {
+			feature.attributes.iconbasename = mp.UNITDATA[obj.unittype].iconbasename;
+		}
 		
 		vectorLayers[LAYER_ID_UNITS].addFeatures([feature]);
 		vectorLayers[LAYER_ID_UNITS].redraw();
